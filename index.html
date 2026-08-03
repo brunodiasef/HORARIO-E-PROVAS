@@ -92,6 +92,46 @@
     font-weight:600; font-size:13px; padding:9px 14px; border-radius:999px;
     box-shadow:0 2px 10px rgba(0,0,0,0.25); cursor:pointer;
   }
+  .sync-badge{
+    margin-top:14px; margin-left:8px; position:relative; z-index:1;
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(255,255,255,0.1); color:#F3F1E8; border:1px solid rgba(255,255,255,0.25);
+    font-weight:600; font-size:12.5px; padding:8px 13px; border-radius:999px; cursor:pointer;
+  }
+  .sync-badge svg{stroke:#F3F1E8; fill:none; stroke-width:1.8;}
+  .sync-badge.synced{background:rgba(201,162,39,0.18); border-color:var(--gold);}
+
+  .sync-overlay{
+    display:none; position:fixed; inset:0; z-index:100;
+    background:rgba(16,26,48,0.72); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .sync-overlay.active{display:flex;}
+  .sync-card{
+    background:var(--card); border-radius:18px; padding:26px 22px; max-width:380px; width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.35); text-align:center;
+  }
+  .sync-card h2{margin:0 0 8px; font-size:19px; color:var(--navy);}
+  .sync-card h3{margin:0 0 10px; font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); text-align:left;}
+  .sync-sub{font-size:13px; color:var(--muted); line-height:1.5; margin:0 0 20px;}
+  .sync-block{margin-bottom:14px;}
+  .sync-row{display:flex; gap:8px;}
+  .sync-row input{
+    flex:1; min-width:0; border:1px solid var(--border); border-radius:9px; padding:11px;
+    font-family:'IBM Plex Mono',monospace; font-size:16px; text-align:center; text-transform:uppercase;
+    letter-spacing:0.1em; background:#FBFAF6;
+  }
+  .sync-row input:focus{outline:2px solid var(--gold); border-color:var(--gold);}
+  .sync-divider{color:var(--muted); font-size:12px; margin:16px 0; position:relative;}
+  .sync-divider::before, .sync-divider::after{content:""; position:absolute; top:50%; width:38%; height:1px; background:var(--border);}
+  .sync-divider::before{left:0;} .sync-divider::after{right:0;}
+  .sync-note{color:var(--provas); font-size:12.5px; margin:10px 0 0; min-height:1px;}
+  .sync-skip{display:block; margin-top:16px; font-size:12px; color:var(--muted); text-decoration:underline;}
+  .sync-code-big{
+    font-family:'IBM Plex Mono',monospace; font-size:32px; font-weight:600; letter-spacing:0.12em;
+    color:var(--navy); background:#F0EEE6; border:1.5px dashed var(--gold); border-radius:12px;
+    padding:16px; margin:6px 0 18px;
+  }
 
   /* ---------- Layout ---------- */
   main{max-width:640px; margin:0 auto; padding:16px 16px 8px;}
@@ -320,6 +360,8 @@
     .view{animation:none;}
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -336,7 +378,47 @@
     <p id="greetDate" class="mono"></p>
   </div>
   <button id="installBtn">⭳ Instalar aplicativo</button>
+  <button id="syncBadge" class="sync-badge" title="Sincronização entre aparelhos">
+    <svg viewBox="0 0 24 24" width="13" height="13"><path d="M17 2.1l4 4-4 4M3 12.1v-1a4 4 0 0 1 4-4h13M7 21.9l-4-4 4-4M21 12.9v1a4 4 0 0 1-4 4H4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="syncBadgeText">Sincronizar</span>
+  </button>
 </header>
+
+<div class="sync-overlay" id="syncOverlay">
+  <div class="sync-card">
+    <div class="seal" style="width:40px;height:40px;margin:0 auto 14px;"><span style="font-size:13px;">IF</span></div>
+    <h2 class="display">Sincronizar entre aparelhos</h2>
+    <p class="sync-sub">Use o mesmo código no celular e no computador para ver as mesmas provas, trabalhos e horário nos dois.</p>
+
+    <div class="sync-block">
+      <h3>Já tenho um código</h3>
+      <div class="sync-row">
+        <input type="text" id="syncCodeInput" placeholder="Ex.: AB3K9P" maxlength="8" autocapitalize="characters">
+        <button id="syncJoinBtn" class="btn-primary" style="width:auto; flex:none; padding:11px 18px;">Entrar</button>
+      </div>
+    </div>
+
+    <div class="sync-divider">ou</div>
+
+    <div class="sync-block">
+      <h3>Primeira vez usando</h3>
+      <button id="syncCreateBtn" class="btn-cancel" style="width:100%;">Criar um código novo</button>
+    </div>
+
+    <p class="sync-note" id="syncErrorMsg"></p>
+    <a href="#" id="syncSkipLink" class="sync-skip">Continuar sem sincronizar por enquanto</a>
+  </div>
+</div>
+
+<div class="sync-overlay" id="syncCodeRevealOverlay">
+  <div class="sync-card">
+    <h2 class="display">Seu código de sincronização</h2>
+    <p class="sync-sub">Anote ou copie este código. Use-o para entrar no mesmo painel a partir do celular (ou de qualquer outro aparelho).</p>
+    <div class="sync-code-big" id="syncCodeBig"></div>
+    <button id="syncCopyBtn" class="btn-primary">Copiar código</button>
+    <button id="syncRevealCloseBtn" class="btn-cancel" style="width:100%; margin-top:8px;">Já anotei, continuar</button>
+  </div>
+</div>
 
 <main>
 
@@ -478,9 +560,9 @@
   var provas = load("agendaEscolar_provas", []);
   var trabalhos = load("agendaEscolar_trabalhos", []);
 
-  function persistHorario(){ save("agendaEscolar_horario", horario); }
-  function persistProvas(){ save("agendaEscolar_provas", provas); }
-  function persistTrabalhos(){ save("agendaEscolar_trabalhos", trabalhos); }
+  function persistHorario(){ save("agendaEscolar_horario", horario); pushToCloud(); }
+  function persistProvas(){ save("agendaEscolar_provas", provas); pushToCloud(); }
+  function persistTrabalhos(){ save("agendaEscolar_trabalhos", trabalhos); pushToCloud(); }
 
   /* ---------- Navegação ---------- */
   var navButtons = document.querySelectorAll("nav.side button");
@@ -957,6 +1039,153 @@
 
   document.getElementById("addAulaBtn").addEventListener("click", addAula);
 
+  /* ---------- Sincronização entre aparelhos (Firebase) ---------- */
+  var firebaseConfig = {
+    apiKey: "AIzaSyBq-PUZTcKSXk6rGHghkn8o6ANs17opBko",
+    authDomain: "agenda-escolar-8b129.firebaseapp.com",
+    projectId: "agenda-escolar-8b129",
+    storageBucket: "agenda-escolar-8b129.firebasestorage.app",
+    messagingSenderId: "512563711977",
+    appId: "1:512563711977:web:b4cfb767f11348810e8578"
+  };
+
+  var db = null;
+  var syncUnsub = null;
+  var syncApplyingRemote = false;
+  var SYNC_KEY = "agendaEscolar_syncCode";
+
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    try{ db.enablePersistence({synchronizeTabs:true}); }catch(e){}
+  }catch(e){ console.warn("Firebase indisponível", e); }
+
+  function getSyncCode(){ return load(SYNC_KEY, null); }
+  function setSyncCode(code){ save(SYNC_KEY, code); }
+
+  function genSyncCode(){
+    var chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sem 0/O/1/I pra evitar confusão
+    var out = "";
+    for(var i=0;i<6;i++){ out += chars[Math.floor(Math.random()*chars.length)]; }
+    return out;
+  }
+
+  function updateSyncBadge(){
+    var code = getSyncCode();
+    var badge = document.getElementById("syncBadge");
+    if(code){
+      badge.classList.add("synced");
+      document.getElementById("syncBadgeText").textContent = code;
+    } else {
+      badge.classList.remove("synced");
+      document.getElementById("syncBadgeText").textContent = "Sincronizar";
+    }
+  }
+
+  function showSyncOverlay(){ document.getElementById("syncOverlay").classList.add("active"); }
+  function hideSyncOverlay(){ document.getElementById("syncOverlay").classList.remove("active"); }
+  function showRevealOverlay(code){
+    document.getElementById("syncCodeBig").textContent = code;
+    document.getElementById("syncCodeRevealOverlay").classList.add("active");
+  }
+  function hideRevealOverlay(){ document.getElementById("syncCodeRevealOverlay").classList.remove("active"); }
+
+  function pushToCloud(){
+    if(!db || syncApplyingRemote) return;
+    var code = getSyncCode();
+    if(!code) return;
+    db.collection("agendas").doc(code).set({
+      horario: horario,
+      provas: provas,
+      trabalhos: trabalhos,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(function(err){ console.warn("Falha ao sincronizar", err); });
+  }
+
+  function applyRemoteData(data){
+    syncApplyingRemote = true;
+    if(data.horario){ horario = data.horario; save("agendaEscolar_horario", horario); }
+    if(data.provas){ provas = data.provas; save("agendaEscolar_provas", provas); }
+    if(data.trabalhos){ trabalhos = data.trabalhos; save("agendaEscolar_trabalhos", trabalhos); }
+    renderTodayStrip(); renderGrade(); renderProvas(); renderTrabalhos(); renderUpcoming();
+    syncApplyingRemote = false;
+  }
+
+  function subscribeToCloud(code){
+    if(!db) return;
+    if(syncUnsub){ syncUnsub(); syncUnsub = null; }
+    var docRef = db.collection("agendas").doc(code);
+    syncUnsub = docRef.onSnapshot(function(snap){
+      if(snap.exists){
+        applyRemoteData(snap.data() || {});
+      } else {
+        docRef.set({
+          horario: horario, provas: provas, trabalhos: trabalhos,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }, function(err){ console.warn("Erro na sincronização", err); });
+  }
+
+  function joinSyncCode(code){
+    code = (code||"").trim().toUpperCase();
+    if(!code){
+      document.getElementById("syncErrorMsg").textContent = "Digite um código válido.";
+      return;
+    }
+    setSyncCode(code);
+    updateSyncBadge();
+    hideSyncOverlay();
+    subscribeToCloud(code);
+  }
+
+  document.getElementById("syncBadge").addEventListener("click", function(){
+    document.getElementById("syncCodeInput").value = getSyncCode() || "";
+    document.getElementById("syncErrorMsg").textContent = "";
+    showSyncOverlay();
+  });
+  document.getElementById("syncJoinBtn").addEventListener("click", function(){
+    joinSyncCode(document.getElementById("syncCodeInput").value);
+  });
+  document.getElementById("syncCodeInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter") joinSyncCode(this.value);
+  });
+  document.getElementById("syncCreateBtn").addEventListener("click", function(){
+    var code = genSyncCode();
+    setSyncCode(code);
+    updateSyncBadge();
+    hideSyncOverlay();
+    subscribeToCloud(code);
+    pushToCloud();
+    showRevealOverlay(code);
+  });
+  document.getElementById("syncRevealCloseBtn").addEventListener("click", hideRevealOverlay);
+  document.getElementById("syncSkipLink").addEventListener("click", function(e){
+    e.preventDefault();
+    save("agendaEscolar_syncPrompted", true);
+    hideSyncOverlay();
+  });
+  document.getElementById("syncCopyBtn").addEventListener("click", function(){
+    var code = document.getElementById("syncCodeBig").textContent;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(code).then(function(){
+        var btn = document.getElementById("syncCopyBtn");
+        var old = btn.textContent; btn.textContent = "Copiado!";
+        setTimeout(function(){ btn.textContent = old; }, 1500);
+      }).catch(function(){});
+    }
+  });
+
+  function initCloudSync(){
+    updateSyncBadge();
+    var code = getSyncCode();
+    if(code){
+      subscribeToCloud(code);
+    } else if(!load("agendaEscolar_syncPrompted", false)){
+      showSyncOverlay();
+    }
+  }
+
   /* ---------- Init ---------- */
   updateGreeting();
   renderTodayStrip();
@@ -964,6 +1193,7 @@
   renderProvas();
   renderTrabalhos();
   renderUpcoming();
+  initCloudSync();
 })();
 </script>
 </body>
