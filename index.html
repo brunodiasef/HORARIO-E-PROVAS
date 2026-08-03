@@ -45,7 +45,7 @@
     color:var(--ink);
     font-family:'Inter',system-ui,sans-serif;
     min-height:100vh;
-    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+    padding-left:calc(76px + env(safe-area-inset-left));
   }
   .display{font-family:'Fraunces',serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
@@ -168,6 +168,31 @@
   }
   table.grade td.subj-cell input:focus{background:#fff9e6; outline:2px solid var(--gold); outline-offset:-2px;}
   table.grade td.time-cell input:focus{outline:2px solid var(--gold); outline-offset:-1px;}
+  table.grade td.rm-cell{
+    background:#F7F6F1; text-align:center; padding:0; width:30px;
+  }
+  table.grade td.rm-cell button{
+    border:none; background:none; color:var(--muted); width:28px; height:28px;
+    border-radius:7px; cursor:pointer; font-size:13px; line-height:1;
+  }
+  table.grade td.rm-cell button:active{background:#e9e6db; color:var(--provas);}
+  .btn-add-aula{
+    display:block; width:100%; margin-top:12px; padding:12px; border-radius:12px;
+    border:1.5px dashed var(--border); background:transparent; color:var(--navy-soft);
+    font-weight:600; font-size:13.5px; cursor:pointer;
+  }
+  .btn-add-aula:active{background:#eef1f6;}
+
+  .turma-filter{
+    width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 11px;
+    font-size:13px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
+    margin-bottom:10px; -webkit-appearance:none; appearance:none;
+  }
+  .turma-filter:focus{outline:2px solid var(--gold); border-color:var(--gold);}
+  .turma-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--provas);
+    background:var(--provas-bg); padding:2px 8px; border-radius:6px; display:inline-block; margin-top:3px;
+  }
 
   /* ---------- Forms ---------- */
   .new-card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--border); padding:16px; margin-bottom:16px;}
@@ -189,6 +214,14 @@
   .btn-primary:active{background:var(--navy-deep);}
   .btn-primary.provas{background:var(--provas);}
   .btn-primary.trabalhos{background:var(--trabalhos);}
+  .form-btn-row{display:flex; gap:8px;}
+  .form-btn-row .btn-primary{flex:1;}
+  .btn-cancel{
+    border:1px solid var(--border); background:#F0EEE6; color:var(--muted);
+    border-radius:9px; padding:11px 16px; font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .btn-cancel:active{background:#e4e1d6;}
+  .icon-btn.edit-btn{color:var(--navy-soft);}
 
   /* ---------- List items (provas / trabalhos) ---------- */
   .item-card{
@@ -218,24 +251,25 @@
   .item-card.completed{opacity:0.6;}
   .item-card.completed .item-subj{text-decoration:line-through;}
 
-  /* ---------- Bottom nav ---------- */
-  nav.bottom{
-    position:fixed; left:0; right:0; bottom:0; z-index:10;
+  /* ---------- Menu lateral ---------- */
+  nav.side{
+    position:fixed; left:0; top:0; bottom:0; z-index:10;
+    width:76px; padding-left:env(safe-area-inset-left);
     background:rgba(255,255,255,0.92); backdrop-filter:blur(10px);
-    border-top:1px solid var(--border);
-    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
-    display:flex; justify-content:space-around;
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column; align-items:stretch;
+    padding-top:20px; gap:4px;
   }
-  nav.bottom button{
-    background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px;
-    color:var(--muted); font-size:10.5px; font-weight:600; padding:4px 10px; cursor:pointer;
-    letter-spacing:0.02em;
+  nav.side button{
+    background:none; border:none; border-left:3px solid transparent;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    color:var(--muted); font-size:10px; font-weight:600; padding:11px 4px; cursor:pointer;
+    letter-spacing:0.02em; position:relative;
   }
-  nav.bottom button svg{width:21px; height:21px; stroke:var(--muted); fill:none; stroke-width:1.8;}
-  nav.bottom button.active{color:var(--navy);}
-  nav.bottom button.active svg{stroke:var(--navy);}
-  nav.bottom button.active .dot{display:block;}
-  nav.bottom .dot{display:none; width:4px; height:4px; border-radius:50%; background:var(--gold); position:absolute; margin-top:-19px;}
+  nav.side button svg{width:21px; height:21px; stroke:var(--muted); fill:none; stroke-width:1.8;}
+  nav.side button.active{color:var(--navy); background:linear-gradient(90deg, rgba(201,162,39,0.12), transparent); border-left-color:var(--gold);}
+  nav.side button.active svg{stroke:var(--navy);}
+  nav.side .dot{display:none;}
 
   ::selection{background:var(--gold-soft);}
 
@@ -278,20 +312,29 @@
     <div class="grade-wrap">
       <table class="grade" id="gradeTable"></table>
     </div>
+    <button class="btn-add-aula" id="addAulaBtn">+ Adicionar aula</button>
   </section>
 
   <!-- ================= PROVAS ================= -->
   <section class="view" id="view-provas">
     <div class="new-card">
-      <h3>Nova prova</h3>
+      <h3 id="provaFormTitle">Nova prova</h3>
       <div class="field"><label>Matéria</label><input id="provaSubj" type="text" placeholder="Ex.: Matemática"></div>
       <div class="row2">
+        <div class="field"><label>Turma</label><input id="provaTurma" type="text" placeholder="Ex.: 9º A"></div>
         <div class="field"><label>Data</label><input id="provaDate" type="date"></div>
       </div>
       <div class="field"><label>Conteúdo (opcional)</label><textarea id="provaDesc" placeholder="Ex.: Capítulos 3 e 4, funções do 2º grau"></textarea></div>
-      <button class="btn-primary provas" id="addProva">Adicionar prova</button>
+      <div class="form-btn-row">
+        <button class="btn-primary provas" id="addProva">Adicionar prova</button>
+        <button class="btn-cancel" id="cancelProvaEdit" style="display:none;">Cancelar</button>
+      </div>
     </div>
-    <div class="section-title"><h2>Provas marcadas</h2><span class="count mono" id="provasCount"></span></div>
+    <div class="section-title">
+      <h2>Provas marcadas</h2>
+      <span class="count mono" id="provasCount"></span>
+    </div>
+    <select class="turma-filter" id="provaTurmaFilter"><option value="">Todas as turmas</option></select>
     <div id="provasList"></div>
   </section>
 
@@ -312,7 +355,7 @@
 
 </main>
 
-<nav class="bottom">
+<nav class="side">
   <button class="active" data-view="inicio">
     <span class="dot"></span>
     <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -369,7 +412,7 @@
   if(!horario){
     horario = { times: DEFAULT_TIMES.slice(), grid: {} };
     for(var d=0; d<DIAS.length; d++){
-      horario.grid[d] = ["","","","","",""];
+      horario.grid[d] = new Array(DEFAULT_TIMES.length).fill("");
     }
   }
   var provas = load("agendaEscolar_provas", []);
@@ -380,7 +423,7 @@
   function persistTrabalhos(){ save("agendaEscolar_trabalhos", trabalhos); }
 
   /* ---------- Navegação ---------- */
-  var navButtons = document.querySelectorAll("nav.bottom button");
+  var navButtons = document.querySelectorAll("nav.side button");
   navButtons.forEach(function(btn){
     btn.addEventListener("click", function(){
       navButtons.forEach(function(b){ b.classList.remove("active"); });
@@ -416,7 +459,7 @@
       return;
     }
     var any = false;
-    for(var i=0;i<6;i++){
+    for(var i=0;i<horario.times.length;i++){
       var subj = horario.grid[idx][i];
       if(!subj) continue;
       any = true;
@@ -435,12 +478,13 @@
     var table = document.getElementById("gradeTable");
     var html = "<thead><tr><th>Aula</th>";
     DIAS.forEach(function(d){ html += "<th>"+d+"</th>"; });
-    html += "</tr></thead><tbody>";
-    for(var i=0;i<6;i++){
+    html += "<th></th></tr></thead><tbody>";
+    for(var i=0;i<horario.times.length;i++){
       html += '<tr><td class="time-cell"><input type="text" data-row="'+i+'" class="time-input" value="'+escapeAttr(horario.times[i]||"")+'"></td>';
       for(var d=0; d<DIAS.length; d++){
         html += '<td class="subj-cell"><input type="text" data-day="'+d+'" data-row="'+i+'" class="subj-input" value="'+escapeAttr(horario.grid[d][i]||"")+'" placeholder="—"></td>';
       }
+      html += '<td class="rm-cell"><button type="button" data-rm="'+i+'" aria-label="Remover aula">✕</button></td>';
       html += "</tr>";
     }
     html += "</tbody>";
@@ -462,6 +506,46 @@
         renderTodayStrip();
       });
     });
+    table.querySelectorAll("[data-rm]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        removeAula(+btn.dataset.rm);
+      });
+    });
+  }
+
+  function nextDefaultTime(){
+    var times = horario.times;
+    var last = times[times.length-1];
+    if(last){
+      var m = last.match(/^(\d{1,2}):(\d{2})$/);
+      if(m){
+        var mins = (+m[1])*60 + (+m[2]) + 50;
+        mins = ((mins % 1440) + 1440) % 1440;
+        var hh = Math.floor(mins/60), mm = mins%60;
+        return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;
+      }
+    }
+    return "--:--";
+  }
+
+  function addAula(){
+    horario.times.push(nextDefaultTime());
+    DIAS.forEach(function(_, d){ horario.grid[d].push(""); });
+    persistHorario();
+    renderGrade();
+    renderTodayStrip();
+  }
+
+  function removeAula(index){
+    if(horario.times.length <= 1){
+      alert("É preciso manter ao menos uma aula na grade.");
+      return;
+    }
+    horario.times.splice(index, 1);
+    DIAS.forEach(function(_, d){ horario.grid[d].splice(index, 1); });
+    persistHorario();
+    renderGrade();
+    renderTodayStrip();
   }
 
   /* ---------- Utilidades de data ---------- */
@@ -499,7 +583,7 @@
   function renderUpcoming(){
     var list = document.getElementById("upcomingList");
     var items = [];
-    provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id}); });
+    provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id, turma:p.turma}); });
     trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id}); });
     items.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
     items = items.filter(function(it){ return daysUntil(it.date) <= 21; }).slice(0,8);
@@ -512,22 +596,37 @@
       var diff = daysUntil(it.date);
       var chip = chipFor(diff);
       var label = it.type === "provas" ? "Prova" : "Trabalho";
+      var turmaTxt = it.turma ? " · "+it.turma : "";
       return '<div class="card upcoming-item">'+
         '<span class="tag-dot '+it.type+'"></span>'+
         '<div class="info"><div class="subj">'+escapeHTML(it.subj)+'</div>'+
-        '<div class="meta">'+label+' · '+formatDateLabel(it.date)+'</div></div>'+
+        '<div class="meta">'+label+turmaTxt+' · '+formatDateLabel(it.date)+'</div></div>'+
         '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
       '</div>';
     }).join("");
   }
 
   /* ---------- Provas ---------- */
+  var provaFilterTurma = "";
+
+  function renderTurmaFilter(){
+    var sel = document.getElementById("provaTurmaFilter");
+    var turmas = Array.from(new Set(provas.map(function(p){ return (p.turma||"").trim(); }).filter(Boolean))).sort();
+    var current = sel.value;
+    sel.innerHTML = '<option value="">Todas as turmas</option>' +
+      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+    sel.value = turmas.indexOf(current) >= 0 ? current : "";
+    provaFilterTurma = sel.value;
+  }
+
   function renderProvas(){
     var wrap = document.getElementById("provasList");
-    var sorted = provas.slice().sort(function(a,b){ return daysUntil(a.date)-daysUntil(b.date); });
-    document.getElementById("provasCount").textContent = provas.length;
+    renderTurmaFilter();
+    var filtered = provas.filter(function(p){ return !provaFilterTurma || p.turma === provaFilterTurma; });
+    var sorted = filtered.slice().sort(function(a,b){ return daysUntil(a.date)-daysUntil(b.date); });
+    document.getElementById("provasCount").textContent = filtered.length + (provaFilterTurma ? "/"+provas.length : "");
     if(sorted.length === 0){
-      wrap.innerHTML = '<div class="empty-note">Nenhuma prova cadastrada ainda.</div>';
+      wrap.innerHTML = '<div class="empty-note">'+(provas.length ? "Nenhuma prova para essa turma." : "Nenhuma prova cadastrada ainda.")+'</div>';
       return;
     }
     wrap.innerHTML = sorted.map(function(p){
@@ -535,9 +634,12 @@
       return '<div class="item-card provas">'+
         '<div class="item-top">'+
           '<div><div class="item-subj">'+escapeHTML(p.subj)+'</div>'+
-          '<div class="item-date">'+formatDateLabel(p.date)+'</div></div>'+
+          '<div class="item-date">'+formatDateLabel(p.date)+'</div>'+
+          (p.turma ? '<span class="turma-badge">'+escapeHTML(p.turma)+'</span>' : '') +
+          '</div>'+
           '<div class="item-actions">'+
             '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
+            '<button class="icon-btn edit-btn" data-edit="'+p.id+'" aria-label="Editar">✎</button>'+
             '<button class="icon-btn" data-del="'+p.id+'" aria-label="Excluir">✕</button>'+
           '</div>'+
         '</div>'+
@@ -546,14 +648,56 @@
     }).join("");
     wrap.querySelectorAll("[data-del]").forEach(function(btn){
       btn.addEventListener("click", function(){
+        if(editingProvaId === btn.dataset.del) cancelProvaEdit();
         provas = provas.filter(function(p){ return p.id !== btn.dataset.del; });
         persistProvas(); renderProvas(); renderUpcoming();
       });
     });
+    wrap.querySelectorAll("[data-edit]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        startProvaEdit(btn.dataset.edit);
+      });
+    });
   }
+
+  document.getElementById("provaTurmaFilter").addEventListener("change", function(){
+    provaFilterTurma = this.value;
+    renderProvas();
+  });
+
+  var editingProvaId = null;
+
+  function startProvaEdit(id){
+    var p = provas.find(function(x){ return x.id === id; });
+    if(!p) return;
+    editingProvaId = id;
+    document.getElementById("provaSubj").value = p.subj || "";
+    document.getElementById("provaTurma").value = p.turma || "";
+    document.getElementById("provaDate").value = p.date || "";
+    document.getElementById("provaDesc").value = p.desc || "";
+    document.getElementById("provaFormTitle").textContent = "Editar prova";
+    document.getElementById("addProva").textContent = "Salvar alterações";
+    document.getElementById("cancelProvaEdit").style.display = "inline-block";
+    document.querySelector('nav.side button[data-view="provas"]').click();
+    document.querySelector("#view-provas .new-card").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function cancelProvaEdit(){
+    editingProvaId = null;
+    document.getElementById("provaSubj").value = "";
+    document.getElementById("provaTurma").value = "";
+    document.getElementById("provaDate").value = "";
+    document.getElementById("provaDesc").value = "";
+    document.getElementById("provaFormTitle").textContent = "Nova prova";
+    document.getElementById("addProva").textContent = "Adicionar prova";
+    document.getElementById("cancelProvaEdit").style.display = "none";
+  }
+
+  document.getElementById("cancelProvaEdit").addEventListener("click", cancelProvaEdit);
 
   document.getElementById("addProva").addEventListener("click", function(){
     var subj = document.getElementById("provaSubj").value.trim();
+    var turma = document.getElementById("provaTurma").value.trim();
     var date = document.getElementById("provaDate").value;
     var desc = document.getElementById("provaDesc").value.trim();
     if(!subj || !date){ 
@@ -561,11 +705,19 @@
       alert("Preencha a "+missing+" da prova.");
       return;
     }
-    provas.push({id:uid(), subj:subj, date:date, desc:desc});
-    persistProvas();
-    document.getElementById("provaSubj").value = "";
-    document.getElementById("provaDate").value = "";
-    document.getElementById("provaDesc").value = "";
+    if(editingProvaId){
+      var p = provas.find(function(x){ return x.id === editingProvaId; });
+      if(p){ p.subj = subj; p.turma = turma; p.date = date; p.desc = desc; }
+      persistProvas();
+      cancelProvaEdit();
+    } else {
+      provas.push({id:uid(), subj:subj, turma:turma, date:date, desc:desc});
+      persistProvas();
+      document.getElementById("provaSubj").value = "";
+      document.getElementById("provaTurma").value = "";
+      document.getElementById("provaDate").value = "";
+      document.getElementById("provaDesc").value = "";
+    }
     renderProvas(); renderUpcoming();
   });
 
@@ -647,6 +799,8 @@
       navigator.serviceWorker.register("./sw.js").catch(function(){ /* offline ou file:// */ });
     });
   }
+
+  document.getElementById("addAulaBtn").addEventListener("click", addAula);
 
   /* ---------- Init ---------- */
   updateGreeting();
