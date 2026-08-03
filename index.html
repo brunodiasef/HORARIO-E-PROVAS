@@ -225,7 +225,7 @@
 
   .turma-filter{
     width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 11px;
-    font-size:13px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
+    font-size:16px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
     margin-bottom:10px; -webkit-appearance:none; appearance:none;
   }
   .turma-filter:focus{outline:2px solid var(--gold); border-color:var(--gold);}
@@ -284,7 +284,7 @@
   .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;}
   .field input, .field textarea{
     width:100%; border:1px solid var(--border); border-radius:9px; padding:10px 11px;
-    font-size:14px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
+    font-size:16px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
   }
   .field input:focus, .field textarea:focus{outline:2px solid var(--gold); border-color:var(--gold); background:#fff;}
   .field textarea{resize:vertical; min-height:56px;}
@@ -358,6 +358,45 @@
 
   @media (prefers-reduced-motion: reduce){
     .view{animation:none;}
+  }
+
+  /* ---------- Responsividade para celular ---------- */
+  @media (max-width: 480px){
+    nav.side{width:60px; padding-top:14px; gap:2px;}
+    nav.side button{font-size:9px; padding:9px 2px; gap:4px; letter-spacing:0;}
+    nav.side button svg{width:19px; height:19px;}
+    body{padding-left:calc(60px + env(safe-area-inset-left));}
+
+    main{padding:12px 10px 8px;}
+    header.top{padding:14px 12px 18px;}
+    .school-name{font-size:9.5px;}
+    .school-name b{font-size:11px;}
+    .greeting h1{font-size:19px;}
+    #installBtn, .sync-badge{font-size:11.5px; padding:7px 11px; margin-top:10px;}
+    .sync-badge{margin-left:6px;}
+
+    .new-card{padding:13px 12px;}
+    .row2{flex-direction:column; gap:10px;}
+    .field textarea{min-height:48px;}
+
+    .cal-grid{gap:3px;}
+    .cal-cell{font-size:11.5px; border-radius:7px;}
+    .cal-header{margin-bottom:8px;}
+    .cal-nav-btn{width:32px; height:32px; font-size:16px;}
+
+    table.grade{min-width:480px;}
+    .item-top{flex-wrap:wrap; row-gap:8px;}
+    .item-actions{flex-wrap:wrap; justify-content:flex-end;}
+
+    .sync-card{padding:20px 16px;}
+    .sync-code-big{font-size:26px; padding:13px;}
+  }
+
+  @media (max-width: 360px){
+    nav.side{width:52px;}
+    nav.side button{font-size:0; padding:10px 0;}
+    body{padding-left:calc(52px + env(safe-area-inset-left));}
+    main{padding:10px 8px 8px;}
   }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
