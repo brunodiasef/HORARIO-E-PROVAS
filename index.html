@@ -706,8 +706,8 @@
     var d = parseDate(dateStr);
     return new Intl.DateTimeFormat("pt-BR", {day:"2-digit", month:"short"}).format(d);
   }
-  function chipFor(diff){
-    if(diff < 0) return {cls:"urgent", text:"atrasado"};
+  function chipFor(diff, pastLabel){
+    if(diff < 0) return {cls:"urgent", text: pastLabel || "atrasado"};
     if(diff === 0) return {cls:"urgent", text:"hoje"};
     if(diff === 1) return {cls:"urgent", text:"amanhã"};
     if(diff <= 3) return {cls:"soon", text:"em "+diff+" dias"};
@@ -736,7 +736,7 @@
     }
     list.innerHTML = items.map(function(it){
       var diff = daysUntil(it.date);
-      var chip = chipFor(diff);
+      var chip = chipFor(diff, it.type === "provas" ? "realizada" : "atrasado");
       var label = it.type === "provas" ? "Prova" : "Trabalho";
       var turmaTxt = it.turma ? " · "+it.turma : "";
       return '<div class="card upcoming-item">'+
@@ -762,7 +762,7 @@
   }
 
   function buildProvaCardHTML(p){
-    var chip = chipFor(daysUntil(p.date));
+    var chip = chipFor(daysUntil(p.date), "realizada");
     return '<div class="item-card provas">'+
       '<div class="item-top">'+
         '<div><div class="item-subj">'+escapeHTML(p.subj)+'</div>'+
