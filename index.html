@@ -767,7 +767,7 @@
     provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id, turma:p.turma}); });
     trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id}); });
     items.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
-    items = items.filter(function(it){ return daysUntil(it.date) <= 21; }).slice(0,8);
+    items = items.filter(function(it){ var d = daysUntil(it.date); return d >= 0 && d <= 21; }).slice(0,8);
 
     if(items.length === 0){
       list.innerHTML = '<div class="empty-note">Nada por perto. Cadastre provas e trabalhos para acompanhar aqui.</div>';
