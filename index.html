@@ -816,6 +816,11 @@
   }
   function escapeAttr(s){ return escapeHTML(s); }
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function turmasOrdenadas(){
+    return turmas.slice().sort(function(a,b){
+      return a.localeCompare(b, "pt-BR", {numeric:true, sensitivity:"base"});
+    });
+  }
 
   /* ---------- Próximos compromissos (dashboard) ---------- */
   function renderUpcoming(){
@@ -851,7 +856,7 @@
     var sel = document.getElementById("provaTurmaFilter");
     var current = sel.value;
     sel.innerHTML = '<option value="">Todas as turmas</option>' +
-      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+      turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
     sel.value = turmas.indexOf(current) >= 0 ? current : "";
     provaFilterTurma = sel.value;
   }
@@ -1060,7 +1065,7 @@
     var sel = document.getElementById("trabTurmaFilter");
     var current = sel.value;
     sel.innerHTML = '<option value="">Todas as turmas</option>' +
-      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+      turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
     sel.value = turmas.indexOf(current) >= 0 ? current : "";
     trabFilterTurma = sel.value;
   }
@@ -1356,7 +1361,7 @@
       if(!sel) return;
       var current = sel.value;
       sel.innerHTML = '<option value="">Selecione</option>' +
-        turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+        turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
       sel.value = current;
     });
   }
@@ -1368,7 +1373,7 @@
       wrap.innerHTML = '<div class="empty-note">Nenhuma turma cadastrada ainda. Adicione acima para usar nas provas e trabalhos.</div>';
       return;
     }
-    wrap.innerHTML = turmas.slice().sort().map(function(t){
+    wrap.innerHTML = turmasOrdenadas().map(function(t){
       return '<div class="turma-item"><span class="name">'+escapeHTML(t)+'</span>'+
         '<button class="icon-btn" data-del-turma="'+escapeAttr(t)+'" aria-label="Excluir">✕</button></div>';
     }).join("");
@@ -1404,7 +1409,7 @@
     var sel = document.getElementById("compTurmaFilter");
     var current = sel.value;
     sel.innerHTML = '<option value="">Todas as turmas</option>' +
-      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+      turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
     sel.value = turmas.indexOf(current) >= 0 ? current : "";
     compFilterTurma = sel.value;
   }
