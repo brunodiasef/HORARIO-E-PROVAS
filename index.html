@@ -334,6 +334,24 @@
   .item-card.completed{opacity:0.6;}
   .item-card.completed .item-subj{text-decoration:line-through;}
 
+  .turma-item{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    border:1px solid var(--border); padding:12px 14px; margin-bottom:8px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .turma-item .name{font-weight:600; font-size:14.5px;}
+
+  .comp-item{
+    background:var(--card); border-radius:12px; box-shadow:var(--shadow);
+    border:1px solid var(--border); border-left:4px solid var(--border);
+    padding:11px 13px; margin-bottom:8px; display:flex; align-items:center; gap:11px;
+  }
+  .comp-item.provas{border-left-color:var(--provas);}
+  .comp-item.trabalhos{border-left-color:var(--trabalhos);}
+  .comp-item .info{flex:1; min-width:0;}
+  .comp-item .subj{font-weight:600; font-size:14px;}
+  .comp-item .meta{font-size:11.5px; color:var(--muted); margin-top:1px;}
+
   /* ---------- Menu lateral ---------- */
   nav.side{
     position:fixed; left:0; top:0; bottom:0; z-index:10;
@@ -485,7 +503,9 @@
       <h3 id="provaFormTitle">Nova prova</h3>
       <div class="field"><label>Matéria</label><input id="provaSubj" type="text" placeholder="Ex.: Matemática" value="Educação Física"></div>
       <div class="row2">
-        <div class="field"><label>Turma</label><input id="provaTurma" type="text" placeholder="Ex.: 9º A"></div>
+        <div class="field"><label>Turma</label>
+          <select id="provaTurma"><option value="">Selecione</option></select>
+        </div>
         <div class="field"><label>Data</label><input id="provaDate" type="date"></div>
       </div>
       <div class="field"><label>Conteúdo (opcional)</label><textarea id="provaDesc" placeholder="Ex.: Capítulos 3 e 4, funções do 2º grau"></textarea></div>
@@ -522,16 +542,41 @@
   <!-- ================= TRABALHOS ================= -->
   <section class="view" id="view-trabalhos">
     <div class="new-card">
-      <h3>Novo trabalho</h3>
+      <h3 id="trabFormTitle">Novo trabalho</h3>
       <div class="field"><label>Matéria</label><input id="trabSubj" type="text" placeholder="Ex.: História"></div>
       <div class="row2">
+        <div class="field"><label>Turma</label>
+          <select id="trabTurma"><option value="">Selecione</option></select>
+        </div>
         <div class="field"><label>Entrega</label><input id="trabDate" type="date"></div>
       </div>
       <div class="field"><label>Descrição (opcional)</label><textarea id="trabDesc" placeholder="Ex.: Resumo sobre a Revolução Industrial"></textarea></div>
-      <button class="btn-primary trabalhos" id="addTrab">Adicionar trabalho</button>
+      <div class="form-btn-row">
+        <button class="btn-primary trabalhos" id="addTrab">Adicionar trabalho</button>
+        <button class="btn-cancel" id="cancelTrabEdit" style="display:none;">Cancelar</button>
+      </div>
     </div>
     <div class="section-title"><h2>Trabalhos</h2><span class="count mono" id="trabCount"></span></div>
+    <select class="turma-filter" id="trabTurmaFilter"><option value="">Todas as turmas</option></select>
     <div id="trabList"></div>
+  </section>
+
+  <!-- ================= TURMAS ================= -->
+  <section class="view" id="view-turmas">
+    <div class="new-card">
+      <h3>Nova turma</h3>
+      <div class="field"><label>Nome da turma</label><input id="turmaNome" type="text" placeholder="Ex.: 9º A"></div>
+      <button class="btn-primary" id="addTurma">Adicionar turma</button>
+    </div>
+    <div class="section-title"><h2>Turmas cadastradas</h2><span class="count mono" id="turmasCount"></span></div>
+    <div id="turmasList"></div>
+  </section>
+
+  <!-- ================= COMPROMISSOS ESCOLARES ================= -->
+  <section class="view" id="view-compromissos">
+    <select class="turma-filter" id="compTurmaFilter"><option value="">Todas as turmas</option></select>
+    <div class="section-title"><h2>Todos os compromissos</h2><span class="count mono" id="compCount"></span></div>
+    <div id="compList"></div>
   </section>
 
 </main>
@@ -556,6 +601,16 @@
     <span class="dot"></span>
     <svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4M5 5h14v14H5z" stroke-linejoin="round" stroke-linecap="round"/></svg>
     Trabalhos
+  </button>
+  <button data-view="turmas">
+    <span class="dot"></span>
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M16 8a3 3 0 1 1 3.2 3M15 15c2.8.4 4.5 2 4.8 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Turmas
+  </button>
+  <button data-view="compromissos">
+    <span class="dot"></span>
+    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg>
+    Compromissos
   </button>
 </nav>
 
@@ -598,10 +653,12 @@
   }
   var provas = load("agendaEscolar_provas", []);
   var trabalhos = load("agendaEscolar_trabalhos", []);
+  var turmas = load("agendaEscolar_turmas", []);
 
   function persistHorario(){ save("agendaEscolar_horario", horario); pushToCloud(); }
   function persistProvas(){ save("agendaEscolar_provas", provas); pushToCloud(); }
   function persistTrabalhos(){ save("agendaEscolar_trabalhos", trabalhos); pushToCloud(); }
+  function persistTurmas(){ save("agendaEscolar_turmas", turmas); pushToCloud(); }
 
   /* ---------- Navegação ---------- */
   var navButtons = document.querySelectorAll("nav.side button");
@@ -765,7 +822,7 @@
     var list = document.getElementById("upcomingList");
     var items = [];
     provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id, turma:p.turma}); });
-    trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id}); });
+    trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id, turma:t.turma}); });
     items.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
     items = items.filter(function(it){ var d = daysUntil(it.date); return d >= 0 && d <= 21; }).slice(0,8);
 
@@ -792,7 +849,6 @@
 
   function renderTurmaFilter(){
     var sel = document.getElementById("provaTurmaFilter");
-    var turmas = Array.from(new Set(provas.map(function(p){ return (p.turma||"").trim(); }).filter(Boolean))).sort();
     var current = sel.value;
     sel.innerHTML = '<option value="">Todas as turmas</option>' +
       turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
@@ -998,49 +1054,107 @@
   });
 
   /* ---------- Trabalhos ---------- */
+  var trabFilterTurma = "";
+
+  function renderTrabTurmaFilter(){
+    var sel = document.getElementById("trabTurmaFilter");
+    var current = sel.value;
+    sel.innerHTML = '<option value="">Todas as turmas</option>' +
+      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+    sel.value = turmas.indexOf(current) >= 0 ? current : "";
+    trabFilterTurma = sel.value;
+  }
+  document.getElementById("trabTurmaFilter").addEventListener("change", function(){
+    trabFilterTurma = this.value;
+    renderTrabalhos();
+  });
+
+  function buildTrabCardHTML(t){
+    var chip = chipFor(daysUntil(t.date));
+    return '<div class="item-card trabalhos'+(t.done?' completed':'')+'">'+
+      (t.done ? '<div class="stamp">Entregue</div>' : '') +
+      '<div class="item-top">'+
+        '<div><div class="item-subj">'+escapeHTML(t.subj)+'</div>'+
+        '<div class="item-date">Entrega: '+formatDateLabel(t.date)+'</div>'+
+        (t.turma ? '<span class="turma-badge">'+escapeHTML(t.turma)+'</span>' : '') +
+        '</div>'+
+        '<div class="item-actions">'+
+          (t.done ? '' : '<span class="chip '+chip.cls+'">'+chip.text+'</span>')+
+          '<button class="icon-btn check-btn'+(t.done?' done':'')+'" data-done="'+t.id+'" aria-label="Concluir">✓</button>'+
+          '<button class="icon-btn edit-btn" data-edit="'+t.id+'" aria-label="Editar">✎</button>'+
+          '<button class="icon-btn" data-del="'+t.id+'" aria-label="Excluir">✕</button>'+
+        '</div>'+
+      '</div>'+
+      (t.desc ? '<div class="item-desc">'+escapeHTML(t.desc)+'</div>' : '') +
+    '</div>';
+  }
+
   function renderTrabalhos(){
     var wrap = document.getElementById("trabList");
-    var sorted = trabalhos.slice().sort(function(a,b){
+    renderTrabTurmaFilter();
+    var filtered = trabalhos.filter(function(t){ return !trabFilterTurma || t.turma === trabFilterTurma; });
+    var sorted = filtered.slice().sort(function(a,b){
       if(!!a.done !== !!b.done) return a.done ? 1 : -1;
       return daysUntil(a.date)-daysUntil(b.date);
     });
-    document.getElementById("trabCount").textContent = trabalhos.length;
+    document.getElementById("trabCount").textContent = filtered.length + (trabFilterTurma ? "/"+trabalhos.length : "");
     if(sorted.length === 0){
-      wrap.innerHTML = '<div class="empty-note">Nenhum trabalho cadastrado ainda.</div>';
+      wrap.innerHTML = '<div class="empty-note">'+(trabalhos.length ? "Nenhum trabalho para essa turma." : "Nenhum trabalho cadastrado ainda.")+'</div>';
       return;
     }
-    wrap.innerHTML = sorted.map(function(t){
-      var chip = chipFor(daysUntil(t.date));
-      return '<div class="item-card trabalhos'+(t.done?' completed':'')+'">'+
-        (t.done ? '<div class="stamp">Entregue</div>' : '') +
-        '<div class="item-top">'+
-          '<div><div class="item-subj">'+escapeHTML(t.subj)+'</div>'+
-          '<div class="item-date">Entrega: '+formatDateLabel(t.date)+'</div></div>'+
-          '<div class="item-actions">'+
-            (t.done ? '' : '<span class="chip '+chip.cls+'">'+chip.text+'</span>')+
-            '<button class="icon-btn check-btn'+(t.done?' done':'')+'" data-done="'+t.id+'" aria-label="Concluir">✓</button>'+
-            '<button class="icon-btn" data-del="'+t.id+'" aria-label="Excluir">✕</button>'+
-          '</div>'+
-        '</div>'+
-        (t.desc ? '<div class="item-desc">'+escapeHTML(t.desc)+'</div>' : '') +
-      '</div>';
-    }).join("");
+    wrap.innerHTML = sorted.map(buildTrabCardHTML).join("");
     wrap.querySelectorAll("[data-del]").forEach(function(btn){
       btn.addEventListener("click", function(){
+        if(editingTrabId === btn.dataset.del) cancelTrabEdit();
         trabalhos = trabalhos.filter(function(t){ return t.id !== btn.dataset.del; });
-        persistTrabalhos(); renderTrabalhos(); renderUpcoming();
+        persistTrabalhos(); renderTrabalhos(); renderUpcoming(); renderCompromissos();
       });
     });
     wrap.querySelectorAll("[data-done]").forEach(function(btn){
       btn.addEventListener("click", function(){
         trabalhos.forEach(function(t){ if(t.id === btn.dataset.done) t.done = !t.done; });
-        persistTrabalhos(); renderTrabalhos(); renderUpcoming();
+        persistTrabalhos(); renderTrabalhos(); renderUpcoming(); renderCompromissos();
+      });
+    });
+    wrap.querySelectorAll("[data-edit]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        startTrabEdit(btn.dataset.edit);
       });
     });
   }
 
+  var editingTrabId = null;
+
+  function startTrabEdit(id){
+    var t = trabalhos.find(function(x){ return x.id === id; });
+    if(!t) return;
+    editingTrabId = id;
+    document.getElementById("trabSubj").value = t.subj || "";
+    document.getElementById("trabTurma").value = t.turma || "";
+    document.getElementById("trabDate").value = t.date || "";
+    document.getElementById("trabDesc").value = t.desc || "";
+    document.getElementById("trabFormTitle").textContent = "Editar trabalho";
+    document.getElementById("addTrab").textContent = "Salvar alterações";
+    document.getElementById("cancelTrabEdit").style.display = "inline-block";
+    document.querySelector('nav.side button[data-view="trabalhos"]').click();
+    document.querySelector("#view-trabalhos .new-card").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function cancelTrabEdit(){
+    editingTrabId = null;
+    document.getElementById("trabSubj").value = "";
+    document.getElementById("trabTurma").value = "";
+    document.getElementById("trabDate").value = "";
+    document.getElementById("trabDesc").value = "";
+    document.getElementById("trabFormTitle").textContent = "Novo trabalho";
+    document.getElementById("addTrab").textContent = "Adicionar trabalho";
+    document.getElementById("cancelTrabEdit").style.display = "none";
+  }
+  document.getElementById("cancelTrabEdit").addEventListener("click", cancelTrabEdit);
+
   document.getElementById("addTrab").addEventListener("click", function(){
     var subj = document.getElementById("trabSubj").value.trim();
+    var turma = document.getElementById("trabTurma").value.trim();
     var date = document.getElementById("trabDate").value;
     var desc = document.getElementById("trabDesc").value.trim();
     if(!subj || !date){
@@ -1048,12 +1162,20 @@
       alert("Preencha a "+missing+" do trabalho.");
       return;
     }
-    trabalhos.push({id:uid(), subj:subj, date:date, desc:desc, done:false});
-    persistTrabalhos();
-    document.getElementById("trabSubj").value = "";
-    document.getElementById("trabDate").value = "";
-    document.getElementById("trabDesc").value = "";
-    renderTrabalhos(); renderUpcoming();
+    if(editingTrabId){
+      var t = trabalhos.find(function(x){ return x.id === editingTrabId; });
+      if(t){ t.subj = subj; t.turma = turma; t.date = date; t.desc = desc; }
+      persistTrabalhos();
+      cancelTrabEdit();
+    } else {
+      trabalhos.push({id:uid(), subj:subj, turma:turma, date:date, desc:desc, done:false});
+      persistTrabalhos();
+      document.getElementById("trabSubj").value = "";
+      document.getElementById("trabTurma").value = "";
+      document.getElementById("trabDate").value = "";
+      document.getElementById("trabDesc").value = "";
+    }
+    renderTrabalhos(); renderUpcoming(); renderCompromissos();
   });
 
   /* ---------- PWA: instalação ---------- */
@@ -1137,6 +1259,7 @@
       horario: horario,
       provas: provas,
       trabalhos: trabalhos,
+      turmas: turmas,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true}).catch(function(err){ console.warn("Falha ao sincronizar", err); });
   }
@@ -1146,7 +1269,8 @@
     if(data.horario){ horario = data.horario; save("agendaEscolar_horario", horario); }
     if(data.provas){ provas = data.provas; save("agendaEscolar_provas", provas); }
     if(data.trabalhos){ trabalhos = data.trabalhos; save("agendaEscolar_trabalhos", trabalhos); }
-    renderTodayStrip(); renderGrade(); renderProvas(); renderTrabalhos(); renderUpcoming();
+    if(data.turmas){ turmas = data.turmas; save("agendaEscolar_turmas", turmas); }
+    renderTodayStrip(); renderGrade(); renderTurmas(); populateTurmaSelects(); renderProvas(); renderTrabalhos(); renderUpcoming(); renderCompromissos();
     syncApplyingRemote = false;
   }
 
@@ -1159,7 +1283,7 @@
         applyRemoteData(snap.data() || {});
       } else {
         docRef.set({
-          horario: horario, provas: provas, trabalhos: trabalhos,
+          horario: horario, provas: provas, trabalhos: trabalhos, turmas: turmas,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
@@ -1225,13 +1349,105 @@
     }
   }
 
+  /* ---------- Turmas ---------- */
+  function populateTurmaSelects(){
+    ["provaTurma","trabTurma"].forEach(function(id){
+      var sel = document.getElementById(id);
+      if(!sel) return;
+      var current = sel.value;
+      sel.innerHTML = '<option value="">Selecione</option>' +
+        turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+      sel.value = current;
+    });
+  }
+
+  function renderTurmas(){
+    var wrap = document.getElementById("turmasList");
+    document.getElementById("turmasCount").textContent = turmas.length;
+    if(turmas.length === 0){
+      wrap.innerHTML = '<div class="empty-note">Nenhuma turma cadastrada ainda. Adicione acima para usar nas provas e trabalhos.</div>';
+      return;
+    }
+    wrap.innerHTML = turmas.slice().sort().map(function(t){
+      return '<div class="turma-item"><span class="name">'+escapeHTML(t)+'</span>'+
+        '<button class="icon-btn" data-del-turma="'+escapeAttr(t)+'" aria-label="Excluir">✕</button></div>';
+    }).join("");
+    wrap.querySelectorAll("[data-del-turma]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var nome = btn.dataset.delTurma;
+        turmas = turmas.filter(function(t){ return t !== nome; });
+        persistTurmas();
+        renderTurmas(); populateTurmaSelects(); renderProvas(); renderTrabalhos(); renderCompromissos();
+      });
+    });
+  }
+
+  document.getElementById("addTurma").addEventListener("click", function(){
+    var input = document.getElementById("turmaNome");
+    var nome = input.value.trim();
+    if(!nome){ alert("Digite o nome da turma."); return; }
+    var exists = turmas.some(function(t){ return t.toLowerCase() === nome.toLowerCase(); });
+    if(exists){ alert("Essa turma já está cadastrada."); return; }
+    turmas.push(nome);
+    persistTurmas();
+    input.value = "";
+    renderTurmas(); populateTurmaSelects(); renderProvas(); renderTrabalhos(); renderCompromissos();
+  });
+  document.getElementById("turmaNome").addEventListener("keydown", function(e){
+    if(e.key === "Enter") document.getElementById("addTurma").click();
+  });
+
+  /* ---------- Compromissos escolares ---------- */
+  var compFilterTurma = "";
+
+  function renderCompTurmaFilter(){
+    var sel = document.getElementById("compTurmaFilter");
+    var current = sel.value;
+    sel.innerHTML = '<option value="">Todas as turmas</option>' +
+      turmas.map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+    sel.value = turmas.indexOf(current) >= 0 ? current : "";
+    compFilterTurma = sel.value;
+  }
+  document.getElementById("compTurmaFilter").addEventListener("change", function(){
+    compFilterTurma = this.value;
+    renderCompromissos();
+  });
+
+  function renderCompromissos(){
+    renderCompTurmaFilter();
+    var items = [];
+    provas.forEach(function(p){ items.push({type:"provas", label:"Prova", subj:p.subj, turma:p.turma, date:p.date, pastLabel:"realizada"}); });
+    trabalhos.forEach(function(t){ items.push({type:"trabalhos", label:"Trabalho", subj:t.subj, turma:t.turma, date:t.date, pastLabel: t.done ? "entregue" : "atrasado", done:t.done}); });
+    var filtered = items.filter(function(it){ return !compFilterTurma || it.turma === compFilterTurma; });
+    filtered.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
+
+    var wrap = document.getElementById("compList");
+    document.getElementById("compCount").textContent = filtered.length;
+    if(filtered.length === 0){
+      wrap.innerHTML = '<div class="empty-note">'+(items.length ? "Nenhum compromisso para essa turma." : "Nenhuma prova ou trabalho cadastrado ainda.")+'</div>';
+      return;
+    }
+    wrap.innerHTML = filtered.map(function(it){
+      var chip = it.done ? {cls:"ok", text:"entregue"} : chipFor(daysUntil(it.date), it.pastLabel);
+      var turmaTxt = it.turma ? " · "+it.turma : "";
+      return '<div class="comp-item '+it.type+'">'+
+        '<div class="info"><div class="subj">'+escapeHTML(it.subj)+'</div>'+
+        '<div class="meta">'+it.label+turmaTxt+' · '+formatDateLabel(it.date)+'</div></div>'+
+        '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
+      '</div>';
+    }).join("");
+  }
+
   /* ---------- Init ---------- */
   updateGreeting();
   renderTodayStrip();
   renderGrade();
+  renderTurmas();
+  populateTurmaSelects();
   renderProvas();
   renderTrabalhos();
   renderUpcoming();
+  renderCompromissos();
   initCloudSync();
 })();
 </script>
