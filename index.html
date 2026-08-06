@@ -89,7 +89,7 @@
   .greeting p{margin:0; font-size:13px; color:#B9C0D0; text-transform:capitalize;}
   #installBtn{
     margin-top:14px; position:relative; z-index:1;
-    display:none; align-items:center; gap:8px;
+    display:inline-flex; align-items:center; gap:8px;
     background:var(--gold); color:var(--navy-deep); border:none;
     font-weight:600; font-size:13px; padding:9px 14px; border-radius:999px;
     box-shadow:0 2px 10px rgba(0,0,0,0.25); cursor:pointer;
@@ -479,6 +479,14 @@
     <div class="sync-code-big" id="syncCodeBig"></div>
     <button id="syncCopyBtn" class="btn-primary">Copiar código</button>
     <button id="syncRevealCloseBtn" class="btn-cancel" style="width:100%; margin-top:8px;">Já anotei, continuar</button>
+  </div>
+</div>
+
+<div class="sync-overlay" id="installHelpOverlay">
+  <div class="sync-card">
+    <h2 class="display">Instalar o aplicativo</h2>
+    <p class="sync-sub" id="installHelpText">Instruções de instalação.</p>
+    <button id="installHelpCloseBtn" class="btn-cancel" style="width:100%;">Entendi</button>
   </div>
 </div>
 
@@ -1209,16 +1217,46 @@
 
   /* ---------- PWA: instalação ---------- */
   var deferredPrompt = null;
+  var installBtnEl = document.getElementById("installBtn");
+
+  function isStandaloneMode(){
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
   window.addEventListener("beforeinstallprompt", function(e){
     e.preventDefault();
     deferredPrompt = e;
-    document.getElementById("installBtn").style.display = "inline-flex";
   });
-  document.getElementById("installBtn").addEventListener("click", function(){
-    if(!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.finally && deferredPrompt.finally(function(){ deferredPrompt = null; });
-    document.getElementById("installBtn").style.display = "none";
+
+  window.addEventListener("appinstalled", function(){
+    deferredPrompt = null;
+    installBtnEl.textContent = "✓ Aplicativo instalado";
+  });
+
+  if(isStandaloneMode()){
+    installBtnEl.textContent = "✓ Aplicativo instalado";
+  }
+
+  function showInstallHelp(){
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var text = isIOS
+      ? 'No Safari, toque no ícone de compartilhar (o quadrado com a seta pra cima) na barra do navegador e escolha "Adicionar à Tela de Início".'
+      : 'Abra o menu do navegador (geralmente os três pontinhos, no canto superior direito) e procure a opção "Instalar aplicativo" ou "Adicionar à tela inicial".';
+    document.getElementById("installHelpText").textContent = text;
+    document.getElementById("installHelpOverlay").classList.add("active");
+  }
+  document.getElementById("installHelpCloseBtn").addEventListener("click", function(){
+    document.getElementById("installHelpOverlay").classList.remove("active");
+  });
+
+  installBtnEl.addEventListener("click", function(){
+    if(isStandaloneMode()) return;
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice && deferredPrompt.userChoice.finally(function(){ deferredPrompt = null; });
+    } else {
+      showInstallHelp();
+    }
   });
 
   if("serviceWorker" in navigator){
@@ -1450,7 +1488,9 @@
     provas.forEach(function(p){ items.push({type:"provas", label:"Prova", subj:p.subj, turma:p.turma, date:p.date, pastLabel:"realizada"}); });
     trabalhos.forEach(function(t){ items.push({type:"trabalhos", label:"Trabalho", subj:t.subj, turma:t.turma, date:t.date, pastLabel: t.done ? "entregue" : "atrasado", done:t.done}); });
     compromissos.forEach(function(c){ items.push({type:"compromissos", id:c.id, label:"Compromisso", subj:c.assunto, turma:c.turma, date:c.date, pastLabel:"realizado"}); });
-    var filtered = items.filter(function(it){ return !compFilterTurma || it.turma === compFilterTurma; });
+    var filtered = items.filter(function(it){
+      return (!compFilterTurma || it.turma === compFilterTurma) && daysUntil(it.date) >= 0;
+    });
     filtered.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
 
     var wrap = document.getElementById("compList");
