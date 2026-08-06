@@ -88,17 +88,20 @@
   .greeting h1{margin:0 0 2px; font-size:22px; font-weight:600;}
   .greeting p{margin:0; font-size:13px; color:#B9C0D0; text-transform:capitalize;}
   #installBtn{
-    margin-top:14px; position:relative; z-index:1;
+    position:relative; z-index:1;
     display:inline-flex; align-items:center; gap:8px;
     background:var(--gold); color:var(--navy-deep); border:none;
     font-weight:600; font-size:13px; padding:9px 14px; border-radius:999px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.25); cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,0.25); cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
   }
+  #installBtn:active{transform:scale(0.97);}
+  .header-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; position:relative; z-index:1;}
   .sync-badge{
-    margin-top:14px; margin-left:8px; position:relative; z-index:1;
+    position:relative; z-index:1;
     display:inline-flex; align-items:center; gap:7px;
     background:rgba(255,255,255,0.1); color:#F3F1E8; border:1px solid rgba(255,255,255,0.25);
     font-weight:600; font-size:12.5px; padding:8px 13px; border-radius:999px; cursor:pointer;
+    transition:background .15s ease;
   }
   .sync-badge svg{stroke:#F3F1E8; fill:none; stroke-width:1.8;}
   .sync-badge.synced{background:rgba(201,162,39,0.18); border-color:var(--gold);}
@@ -146,6 +149,18 @@
   }
   .section-title h2{font-size:12px; text-transform:uppercase; letter-spacing:0.09em; color:var(--muted); margin:0; font-weight:600;}
   .section-title .count{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);}
+
+  .section-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:none; border:none; padding:0; margin:22px 0 10px; cursor:pointer;
+  }
+  .section-toggle-label{display:flex; align-items:baseline; gap:8px;}
+  .section-toggle-label h2{font-size:12px; text-transform:uppercase; letter-spacing:0.09em; color:var(--muted); margin:0; font-weight:600;}
+  .section-toggle-label .count{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted);}
+  .section-toggle .chevron{color:var(--muted); transition:transform .2s ease;}
+  .section-toggle.open .chevron{transform:rotate(180deg);}
+  .collapsible{display:none;}
+  .collapsible.open{display:block;}
 
   .card{
     background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
@@ -217,7 +232,9 @@
   table.grade td.rm-cell button{
     border:none; background:none; color:var(--muted); width:28px; height:28px;
     border-radius:7px; cursor:pointer; font-size:13px; line-height:1;
+    display:flex; align-items:center; justify-content:center; transition:background .15s ease;
   }
+  table.grade td.rm-cell button svg{display:block;}
   table.grade td.rm-cell button:active{background:#e9e6db; color:var(--provas);}
   .btn-add-aula{
     display:block; width:100%; margin-top:12px; padding:12px; border-radius:12px;
@@ -226,12 +243,16 @@
   }
   .btn-add-aula:active{background:#eef1f6;}
 
-  .turma-filter{
-    width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 11px;
-    font-size:16px; font-family:'Inter',sans-serif; background:#FBFAF6; color:var(--ink);
-    margin-bottom:10px; -webkit-appearance:none; appearance:none;
+  .turma-filter, .field select{
+    width:100%; border:1px solid var(--border); border-radius:9px; padding:9px 34px 9px 11px;
+    font-size:16px; font-family:'Inter',sans-serif; background-color:#FBFAF6; color:var(--ink);
+    -webkit-appearance:none; appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666f7d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat; background-position:right 10px center; background-size:16px;
   }
-  .turma-filter:focus{outline:2px solid var(--gold); border-color:var(--gold);}
+  .turma-filter{margin-bottom:10px;}
+  .field select{padding-top:10px; padding-bottom:10px;}
+  .turma-filter:focus, .field select:focus{outline:2px solid var(--gold); border-color:var(--gold);}
   .turma-badge{
     font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--provas);
     background:var(--provas-bg); padding:2px 8px; border-radius:6px; display:inline-block; margin-top:3px;
@@ -242,14 +263,14 @@
   }
   .view-toggle button{
     flex:1; border:none; background:none; padding:8px 6px; border-radius:8px;
-    font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;
+    font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:background .15s ease, color .15s ease;
   }
   .view-toggle button.active{background:var(--card); color:var(--navy); box-shadow:var(--shadow);}
 
   .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .cal-nav-btn{
     width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card);
-    color:var(--navy); font-size:18px; cursor:pointer; line-height:1;
+    color:var(--navy); font-size:18px; cursor:pointer; line-height:1; transition:background .15s ease;
   }
   .cal-nav-btn:active{background:#eef1f6;}
   .cal-month-label{font-size:16px; font-weight:600; text-transform:capitalize;}
@@ -295,16 +316,16 @@
   .row2 > .field{flex:1;}
   .btn-primary{
     width:100%; border:none; border-radius:9px; padding:11px; font-size:14px; font-weight:600;
-    background:var(--navy); color:#fff; cursor:pointer;
+    background:var(--navy); color:#fff; cursor:pointer; transition:background .15s ease, transform .1s ease;
   }
-  .btn-primary:active{background:var(--navy-deep);}
+  .btn-primary:active{background:var(--navy-deep); transform:scale(0.99);}
   .btn-primary.provas{background:var(--provas);}
   .btn-primary.trabalhos{background:var(--trabalhos);}
   .form-btn-row{display:flex; gap:8px;}
   .form-btn-row .btn-primary{flex:1;}
   .btn-cancel{
     border:1px solid var(--border); background:#F0EEE6; color:var(--muted);
-    border-radius:9px; padding:11px 16px; font-size:14px; font-weight:600; cursor:pointer;
+    border-radius:9px; padding:11px 16px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s ease;
   }
   .btn-cancel:active{background:#e4e1d6;}
   .icon-btn.edit-btn{color:var(--navy-soft);}
@@ -325,7 +346,9 @@
   .icon-btn{
     border:none; background:#F0EEE6; width:30px; height:30px; border-radius:8px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
+    transition:background .15s ease, color .15s ease;
   }
+  .icon-btn svg{display:block;}
   .icon-btn:active{background:#e4e1d6;}
   .check-btn{border:1.5px solid var(--trabalhos); background:#fff;}
   .check-btn.done{background:var(--trabalhos); color:#fff;}
@@ -370,9 +393,9 @@
     background:none; border:none; border-left:3px solid transparent;
     display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--muted); font-size:10px; font-weight:600; padding:11px 4px; cursor:pointer;
-    letter-spacing:0.02em; position:relative;
+    letter-spacing:0.02em; position:relative; transition:background .15s ease, color .15s ease, border-color .15s ease;
   }
-  nav.side button svg{width:21px; height:21px; stroke:var(--muted); fill:none; stroke-width:1.8;}
+  nav.side button svg{width:21px; height:21px; stroke:var(--muted); fill:none; stroke-width:1.8; transition:stroke .15s ease;}
   nav.side button.active{color:var(--navy); background:linear-gradient(90deg, rgba(201,162,39,0.12), transparent); border-left-color:var(--gold);}
   nav.side button.active svg{stroke:var(--navy);}
   nav.side .dot{display:none;}
@@ -395,8 +418,8 @@
     .school-name{font-size:9.5px;}
     .school-name b{font-size:11px;}
     .greeting h1{font-size:19px;}
-    #installBtn, .sync-badge{font-size:11.5px; padding:7px 11px; margin-top:10px;}
-    .sync-badge{margin-left:6px;}
+    #installBtn, .sync-badge{font-size:11.5px; padding:7px 11px;}
+    .header-actions{margin-top:10px;}
 
     .new-card{padding:13px 12px;}
     .row2{flex-direction:column; gap:10px;}
@@ -439,11 +462,13 @@
     <h1 class="display" id="greetTitle">Olá!</h1>
     <p id="greetDate" class="mono"></p>
   </div>
-  <button id="installBtn">⭳ Instalar aplicativo</button>
-  <button id="syncBadge" class="sync-badge" title="Sincronização entre aparelhos">
-    <svg viewBox="0 0 24 24" width="13" height="13"><path d="M17 2.1l4 4-4 4M3 12.1v-1a4 4 0 0 1 4-4h13M7 21.9l-4-4 4-4M21 12.9v1a4 4 0 0 1-4 4H4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span id="syncBadgeText">Sincronizar</span>
-  </button>
+  <div class="header-actions">
+    <button id="installBtn">⭳ Instalar aplicativo</button>
+    <button id="syncBadge" class="sync-badge" title="Sincronização entre aparelhos">
+      <svg viewBox="0 0 24 24" width="13" height="13"><path d="M17 2.1l4 4-4 4M3 12.1v-1a4 4 0 0 1 4-4h13M7 21.9l-4-4 4-4M21 12.9v1a4 4 0 0 1-4 4H4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="syncBadgeText">Sincronizar</span>
+    </button>
+  </div>
 </header>
 
 <div class="sync-overlay" id="syncOverlay">
@@ -581,8 +606,14 @@
       <div class="field"><label>Nome da turma</label><input id="turmaNome" type="text" placeholder="Ex.: 9º A"></div>
       <button class="btn-primary" id="addTurma">Adicionar turma</button>
     </div>
-    <div class="section-title"><h2>Turmas cadastradas</h2><span class="count mono" id="turmasCount"></span></div>
-    <div id="turmasList"></div>
+    <button type="button" class="section-toggle" id="turmasToggle">
+      <span class="section-toggle-label">
+        <h2>Turmas cadastradas</h2>
+        <span class="count mono" id="turmasCount"></span>
+      </span>
+      <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="turmasList" class="collapsible"></div>
   </section>
 
   <!-- ================= COMPROMISSOS ESCOLARES ================= -->
@@ -752,7 +783,7 @@
       for(var d=0; d<DIAS.length; d++){
         html += '<td class="subj-cell"><input type="text" data-day="'+d+'" data-row="'+i+'" class="subj-input" value="'+escapeAttr(horario.grid[d][i]||"")+'" placeholder="—"></td>';
       }
-      html += '<td class="rm-cell"><button type="button" data-rm="'+i+'" aria-label="Remover aula">✕</button></td>';
+      html += '<td class="rm-cell"><button type="button" data-rm="'+i+'" aria-label="Remover aula">'+ICON_DELETE+'</button></td>';
       html += "</tr>";
     }
     html += "</tbody>";
@@ -846,6 +877,9 @@
   }
   function escapeAttr(s){ return escapeHTML(s); }
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_DELETE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12.5l4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function turmasOrdenadas(){
     return turmas.slice().sort(function(a,b){
       return a.localeCompare(b, "pt-BR", {numeric:true, sensitivity:"base"});
@@ -903,8 +937,8 @@
         '</div>'+
         '<div class="item-actions">'+
           '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
-          '<button class="icon-btn edit-btn" data-edit="'+p.id+'" aria-label="Editar">✎</button>'+
-          '<button class="icon-btn" data-del="'+p.id+'" aria-label="Excluir">✕</button>'+
+          '<button class="icon-btn edit-btn" data-edit="'+p.id+'" aria-label="Editar">'+ICON_EDIT+'</button>'+
+          '<button class="icon-btn" data-del="'+p.id+'" aria-label="Excluir">'+ICON_DELETE+'</button>'+
         '</div>'+
       '</div>'+
       (p.desc ? '<div class="item-desc">'+escapeHTML(p.desc)+'</div>' : '') +
@@ -1117,9 +1151,9 @@
         '</div>'+
         '<div class="item-actions">'+
           (t.done ? '' : '<span class="chip '+chip.cls+'">'+chip.text+'</span>')+
-          '<button class="icon-btn check-btn'+(t.done?' done':'')+'" data-done="'+t.id+'" aria-label="Concluir">✓</button>'+
-          '<button class="icon-btn edit-btn" data-edit="'+t.id+'" aria-label="Editar">✎</button>'+
-          '<button class="icon-btn" data-del="'+t.id+'" aria-label="Excluir">✕</button>'+
+          '<button class="icon-btn check-btn'+(t.done?' done':'')+'" data-done="'+t.id+'" aria-label="Concluir">'+ICON_CHECK+'</button>'+
+          '<button class="icon-btn edit-btn" data-edit="'+t.id+'" aria-label="Editar">'+ICON_EDIT+'</button>'+
+          '<button class="icon-btn" data-del="'+t.id+'" aria-label="Excluir">'+ICON_DELETE+'</button>'+
         '</div>'+
       '</div>'+
       (t.desc ? '<div class="item-desc">'+escapeHTML(t.desc)+'</div>' : '') +
@@ -1439,7 +1473,7 @@
     }
     wrap.innerHTML = turmasOrdenadas().map(function(t){
       return '<div class="turma-item"><span class="name">'+escapeHTML(t)+'</span>'+
-        '<button class="icon-btn" data-del-turma="'+escapeAttr(t)+'" aria-label="Excluir">✕</button></div>';
+        '<button class="icon-btn" data-del-turma="'+escapeAttr(t)+'" aria-label="Excluir">'+ICON_DELETE+'</button></div>';
     }).join("");
     wrap.querySelectorAll("[data-del-turma]").forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -1464,6 +1498,10 @@
   });
   document.getElementById("turmaNome").addEventListener("keydown", function(e){
     if(e.key === "Enter") document.getElementById("addTurma").click();
+  });
+  document.getElementById("turmasToggle").addEventListener("click", function(){
+    this.classList.toggle("open");
+    document.getElementById("turmasList").classList.toggle("open");
   });
 
   /* ---------- Compromissos escolares ---------- */
@@ -1503,8 +1541,8 @@
       var chip = it.done ? {cls:"ok", text:"entregue"} : chipFor(daysUntil(it.date), it.pastLabel);
       var turmaTxt = it.turma ? " · "+it.turma : "";
       var actions = it.type === "compromissos"
-        ? '<button class="icon-btn edit-btn" data-comp-edit="'+it.id+'" aria-label="Editar">✎</button>'+
-          '<button class="icon-btn" data-comp-del="'+it.id+'" aria-label="Excluir">✕</button>'
+        ? '<button class="icon-btn edit-btn" data-comp-edit="'+it.id+'" aria-label="Editar">'+ICON_EDIT+'</button>'+
+          '<button class="icon-btn" data-comp-del="'+it.id+'" aria-label="Excluir">'+ICON_DELETE+'</button>'
         : "";
       return '<div class="comp-item '+it.type+'">'+
         '<div class="info"><div class="subj">'+escapeHTML(it.subj)+'</div>'+
