@@ -1,4 +1,4 @@
-const CACHE_NAME = "agenda-escolar-v1";
+const CACHE_NAME = "agenda-escolar-v2";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
@@ -24,6 +24,27 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  const isHTML = event.request.mode === "navigate" || event.request.destination === "document";
+
+  if (isHTML) {
+    // Página principal: sempre busca a versão mais nova na rede primeiro.
+    // Só usa o cache se estiver sem internet.
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Demais arquivos (ícones, manifest): cache primeiro, atualiza em segundo plano.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
