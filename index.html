@@ -32,6 +32,8 @@
     --provas-bg:#f6e9eb;
     --trabalhos:#2F5233;
     --trabalhos-bg:#e9efe7;
+    --comp:#1f6f78;
+    --comp-bg:#e5eff0;
     --shadow:0 1px 2px rgba(16,26,48,0.06), 0 4px 16px rgba(16,26,48,0.06);
     --radius:14px;
   }
@@ -168,6 +170,7 @@
   .tag-dot{width:9px;height:9px;border-radius:50%;flex:none;}
   .tag-dot.provas{background:var(--provas);}
   .tag-dot.trabalhos{background:var(--trabalhos);}
+  .tag-dot.compromissos{background:var(--comp);}
   .upcoming-item .info{flex:1; min-width:0;}
   .upcoming-item .info .subj{font-weight:600; font-size:14.5px;}
   .upcoming-item .info .meta{font-size:12px; color:var(--muted); margin-top:1px;}
@@ -348,6 +351,8 @@
   }
   .comp-item.provas{border-left-color:var(--provas);}
   .comp-item.trabalhos{border-left-color:var(--trabalhos);}
+  .comp-item.compromissos{border-left-color:var(--comp);}
+  .comp-item .item-actions{gap:6px;}
   .comp-item .info{flex:1; min-width:0;}
   .comp-item .subj{font-weight:600; font-size:14px;}
   .comp-item .meta{font-size:11.5px; color:var(--muted); margin-top:1px;}
@@ -574,8 +579,23 @@
 
   <!-- ================= COMPROMISSOS ESCOLARES ================= -->
   <section class="view" id="view-compromissos">
-    <select class="turma-filter" id="compTurmaFilter"><option value="">Todas as turmas</option></select>
+    <div class="new-card">
+      <h3 id="compFormTitle">Novo compromisso</h3>
+      <div class="field"><label>Assunto</label><input id="compAssunto" type="text" placeholder="Ex.: Reunião de pais"></div>
+      <div class="row2">
+        <div class="field"><label>Turma</label>
+          <select id="compTurma"><option value="">Selecione</option></select>
+        </div>
+        <div class="field"><label>Data</label><input id="compDate" type="date"></div>
+      </div>
+      <div class="field"><label>Descrição (opcional)</label><textarea id="compDesc" placeholder="Detalhes do compromisso"></textarea></div>
+      <div class="form-btn-row">
+        <button class="btn-primary" id="addComp">Adicionar compromisso</button>
+        <button class="btn-cancel" id="cancelCompEdit" style="display:none;">Cancelar</button>
+      </div>
+    </div>
     <div class="section-title"><h2>Todos os compromissos</h2><span class="count mono" id="compCount"></span></div>
+    <select class="turma-filter" id="compTurmaFilter"><option value="">Todas as turmas</option></select>
     <div id="compList"></div>
   </section>
 
@@ -654,11 +674,13 @@
   var provas = load("agendaEscolar_provas", []);
   var trabalhos = load("agendaEscolar_trabalhos", []);
   var turmas = load("agendaEscolar_turmas", []);
+  var compromissos = load("agendaEscolar_compromissos", []);
 
   function persistHorario(){ save("agendaEscolar_horario", horario); pushToCloud(); }
   function persistProvas(){ save("agendaEscolar_provas", provas); pushToCloud(); }
   function persistTrabalhos(){ save("agendaEscolar_trabalhos", trabalhos); pushToCloud(); }
   function persistTurmas(){ save("agendaEscolar_turmas", turmas); pushToCloud(); }
+  function persistCompromissos(){ save("agendaEscolar_compromissos", compromissos); pushToCloud(); }
 
   /* ---------- Navegação ---------- */
   var navButtons = document.querySelectorAll("nav.side button");
@@ -828,6 +850,7 @@
     var items = [];
     provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id, turma:p.turma}); });
     trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id, turma:t.turma}); });
+    compromissos.forEach(function(c){ items.push({type:"compromissos", subj:c.assunto, date:c.date, id:c.id, turma:c.turma}); });
     items.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
     items = items.filter(function(it){ var d = daysUntil(it.date); return d >= 0 && d <= 21; }).slice(0,8);
 
@@ -837,8 +860,9 @@
     }
     list.innerHTML = items.map(function(it){
       var diff = daysUntil(it.date);
-      var chip = chipFor(diff, it.type === "provas" ? "realizada" : "atrasado");
-      var label = it.type === "provas" ? "Prova" : "Trabalho";
+      var pastLabel = it.type === "provas" ? "realizada" : (it.type === "compromissos" ? "realizado" : "atrasado");
+      var chip = chipFor(diff, pastLabel);
+      var label = it.type === "provas" ? "Prova" : (it.type === "compromissos" ? "Compromisso" : "Trabalho");
       var turmaTxt = it.turma ? " · "+it.turma : "";
       return '<div class="card upcoming-item">'+
         '<span class="tag-dot '+it.type+'"></span>'+
@@ -1265,6 +1289,7 @@
       provas: provas,
       trabalhos: trabalhos,
       turmas: turmas,
+      compromissos: compromissos,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true}).catch(function(err){ console.warn("Falha ao sincronizar", err); });
   }
@@ -1275,6 +1300,7 @@
     if(data.provas){ provas = data.provas; save("agendaEscolar_provas", provas); }
     if(data.trabalhos){ trabalhos = data.trabalhos; save("agendaEscolar_trabalhos", trabalhos); }
     if(data.turmas){ turmas = data.turmas; save("agendaEscolar_turmas", turmas); }
+    if(data.compromissos){ compromissos = data.compromissos; save("agendaEscolar_compromissos", compromissos); }
     renderTodayStrip(); renderGrade(); renderTurmas(); populateTurmaSelects(); renderProvas(); renderTrabalhos(); renderUpcoming(); renderCompromissos();
     syncApplyingRemote = false;
   }
@@ -1288,7 +1314,7 @@
         applyRemoteData(snap.data() || {});
       } else {
         docRef.set({
-          horario: horario, provas: provas, trabalhos: trabalhos, turmas: turmas,
+          horario: horario, provas: provas, trabalhos: trabalhos, turmas: turmas, compromissos: compromissos,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
@@ -1356,7 +1382,7 @@
 
   /* ---------- Turmas ---------- */
   function populateTurmaSelects(){
-    ["provaTurma","trabTurma"].forEach(function(id){
+    ["provaTurma","trabTurma","compTurma"].forEach(function(id){
       var sel = document.getElementById(id);
       if(!sel) return;
       var current = sel.value;
@@ -1423,25 +1449,99 @@
     var items = [];
     provas.forEach(function(p){ items.push({type:"provas", label:"Prova", subj:p.subj, turma:p.turma, date:p.date, pastLabel:"realizada"}); });
     trabalhos.forEach(function(t){ items.push({type:"trabalhos", label:"Trabalho", subj:t.subj, turma:t.turma, date:t.date, pastLabel: t.done ? "entregue" : "atrasado", done:t.done}); });
+    compromissos.forEach(function(c){ items.push({type:"compromissos", id:c.id, label:"Compromisso", subj:c.assunto, turma:c.turma, date:c.date, pastLabel:"realizado"}); });
     var filtered = items.filter(function(it){ return !compFilterTurma || it.turma === compFilterTurma; });
     filtered.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
 
     var wrap = document.getElementById("compList");
     document.getElementById("compCount").textContent = filtered.length;
     if(filtered.length === 0){
-      wrap.innerHTML = '<div class="empty-note">'+(items.length ? "Nenhum compromisso para essa turma." : "Nenhuma prova ou trabalho cadastrado ainda.")+'</div>';
+      wrap.innerHTML = '<div class="empty-note">'+(items.length ? "Nenhum compromisso para essa turma." : "Nenhuma prova, trabalho ou compromisso cadastrado ainda.")+'</div>';
       return;
     }
     wrap.innerHTML = filtered.map(function(it){
       var chip = it.done ? {cls:"ok", text:"entregue"} : chipFor(daysUntil(it.date), it.pastLabel);
       var turmaTxt = it.turma ? " · "+it.turma : "";
+      var actions = it.type === "compromissos"
+        ? '<button class="icon-btn edit-btn" data-comp-edit="'+it.id+'" aria-label="Editar">✎</button>'+
+          '<button class="icon-btn" data-comp-del="'+it.id+'" aria-label="Excluir">✕</button>'
+        : "";
       return '<div class="comp-item '+it.type+'">'+
         '<div class="info"><div class="subj">'+escapeHTML(it.subj)+'</div>'+
         '<div class="meta">'+it.label+turmaTxt+' · '+formatDateLabel(it.date)+'</div></div>'+
         '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
+        (actions ? '<div class="item-actions">'+actions+'</div>' : '') +
       '</div>';
     }).join("");
+
+    wrap.querySelectorAll("[data-comp-del]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(editingCompId === btn.dataset.compDel) cancelCompEdit();
+        compromissos = compromissos.filter(function(c){ return c.id !== btn.dataset.compDel; });
+        persistCompromissos(); renderCompromissos(); renderUpcoming();
+      });
+    });
+    wrap.querySelectorAll("[data-comp-edit]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        startCompEdit(btn.dataset.compEdit);
+      });
+    });
   }
+
+  var editingCompId = null;
+
+  function startCompEdit(id){
+    var c = compromissos.find(function(x){ return x.id === id; });
+    if(!c) return;
+    editingCompId = id;
+    document.getElementById("compAssunto").value = c.assunto || "";
+    document.getElementById("compTurma").value = c.turma || "";
+    document.getElementById("compDate").value = c.date || "";
+    document.getElementById("compDesc").value = c.desc || "";
+    document.getElementById("compFormTitle").textContent = "Editar compromisso";
+    document.getElementById("addComp").textContent = "Salvar alterações";
+    document.getElementById("cancelCompEdit").style.display = "inline-block";
+    document.querySelector("#view-compromissos .new-card").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function cancelCompEdit(){
+    editingCompId = null;
+    document.getElementById("compAssunto").value = "";
+    document.getElementById("compTurma").value = "";
+    document.getElementById("compDate").value = "";
+    document.getElementById("compDesc").value = "";
+    document.getElementById("compFormTitle").textContent = "Novo compromisso";
+    document.getElementById("addComp").textContent = "Adicionar compromisso";
+    document.getElementById("cancelCompEdit").style.display = "none";
+  }
+  document.getElementById("cancelCompEdit").addEventListener("click", cancelCompEdit);
+
+  document.getElementById("addComp").addEventListener("click", function(){
+    var assunto = document.getElementById("compAssunto").value.trim();
+    var turma = document.getElementById("compTurma").value.trim();
+    var date = document.getElementById("compDate").value;
+    var desc = document.getElementById("compDesc").value.trim();
+    if(!assunto || !date){
+      var missing = !assunto ? "assunto" : "data";
+      alert("Preencha o "+missing+" do compromisso.");
+      return;
+    }
+    if(editingCompId){
+      var c = compromissos.find(function(x){ return x.id === editingCompId; });
+      if(c){ c.assunto = assunto; c.turma = turma; c.date = date; c.desc = desc; }
+      persistCompromissos();
+      cancelCompEdit();
+    } else {
+      compromissos.push({id:uid(), assunto:assunto, turma:turma, date:date, desc:desc});
+      persistCompromissos();
+      document.getElementById("compAssunto").value = "";
+      document.getElementById("compTurma").value = "";
+      document.getElementById("compDate").value = "";
+      document.getElementById("compDesc").value = "";
+    }
+    renderCompromissos();
+    renderUpcoming();
+  });
 
   /* ---------- Init ---------- */
   updateGreeting();
