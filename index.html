@@ -266,6 +266,7 @@
     font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:background .15s ease, color .15s ease;
   }
   .view-toggle button.active{background:var(--card); color:var(--navy); box-shadow:var(--shadow);}
+  #compRepeatToggle button{padding:8px 3px; font-size:11.5px;}
 
   .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
   .cal-nav-btn{
@@ -629,6 +630,7 @@
       <div class="view-toggle" id="compRepeatToggle" style="margin-bottom:12px;">
         <button type="button" class="active" data-repeat="once">Data única</button>
         <button type="button" data-repeat="weekly">Toda semana</button>
+        <button type="button" data-repeat="daily">Diariamente</button>
       </div>
 
       <div class="row2">
@@ -1541,7 +1543,12 @@
     d.setDate(d.getDate() + diff);
     return d;
   }
+  function todayYMD(){
+    var d = new Date();
+    return ymd(d.getFullYear(), d.getMonth(), d.getDate());
+  }
   function compEffectiveDate(c){
+    if(c.recurring === "daily") return todayYMD();
     if(c.recurring){
       var d = nextWeekdayDate(c.weekday);
       return ymd(d.getFullYear(), d.getMonth(), d.getDate());
@@ -1549,6 +1556,7 @@
     return c.date;
   }
   function compRecurrenceLabel(c){
+    if(c.recurring === "daily") return "Todos os dias";
     return WEEKDAY_TODA[c.weekday] || "Toda semana";
   }
 
@@ -1635,7 +1643,10 @@
     document.getElementById("compAssunto").value = c.assunto || "";
     document.getElementById("compTurma").value = c.turma || "";
     document.getElementById("compDesc").value = c.desc || "";
-    if(c.recurring){
+    if(c.recurring === "daily"){
+      setCompRepeatMode("daily");
+      document.getElementById("compDate").value = "";
+    } else if(c.recurring){
       setCompRepeatMode("weekly");
       document.getElementById("compWeekday").value = String(c.weekday);
       document.getElementById("compDate").value = "";
@@ -1666,11 +1677,11 @@
     var assunto = document.getElementById("compAssunto").value.trim();
     var turma = document.getElementById("compTurma").value.trim();
     var desc = document.getElementById("compDesc").value.trim();
-    var weekly = compRepeatMode === "weekly";
-    var date = weekly ? "" : document.getElementById("compDate").value;
-    var weekday = weekly ? parseInt(document.getElementById("compWeekday").value, 10) : null;
+    var mode = compRepeatMode; // "once" | "weekly" | "daily"
+    var date = mode === "once" ? document.getElementById("compDate").value : "";
+    var weekday = mode === "weekly" ? parseInt(document.getElementById("compWeekday").value, 10) : null;
 
-    if(!assunto || (!weekly && !date)){
+    if(!assunto || (mode === "once" && !date)){
       var missing = !assunto ? "assunto" : "data";
       alert("Preencha o "+missing+" do compromisso.");
       return;
@@ -1679,15 +1690,17 @@
       var c = compromissos.find(function(x){ return x.id === editingCompId; });
       if(c){
         c.assunto = assunto; c.turma = turma; c.desc = desc;
-        c.recurring = weekly;
-        if(weekly){ c.weekday = weekday; delete c.date; }
-        else { c.date = date; delete c.weekday; }
+        if(mode === "daily"){ c.recurring = "daily"; delete c.date; delete c.weekday; }
+        else if(mode === "weekly"){ c.recurring = true; c.weekday = weekday; delete c.date; }
+        else { c.recurring = false; c.date = date; delete c.weekday; }
       }
       persistCompromissos();
       cancelCompEdit();
     } else {
-      var novo = {id:uid(), assunto:assunto, turma:turma, desc:desc, recurring:weekly};
-      if(weekly){ novo.weekday = weekday; } else { novo.date = date; }
+      var novo = {id:uid(), assunto:assunto, turma:turma, desc:desc};
+      if(mode === "daily"){ novo.recurring = "daily"; }
+      else if(mode === "weekly"){ novo.recurring = true; novo.weekday = weekday; }
+      else { novo.recurring = false; novo.date = date; }
       compromissos.push(novo);
       persistCompromissos();
       document.getElementById("compAssunto").value = "";
