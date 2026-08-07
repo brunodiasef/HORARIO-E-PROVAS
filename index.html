@@ -379,6 +379,10 @@
   .comp-item .info{flex:1; min-width:0;}
   .comp-item .subj{font-weight:600; font-size:14px;}
   .comp-item .meta{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .recur-badge{
+    flex:none; width:22px; height:22px; border-radius:50%; background:var(--comp-bg); color:var(--comp);
+    display:flex; align-items:center; justify-content:center;
+  }
 
   /* ---------- Menu lateral ---------- */
   nav.side{
@@ -621,11 +625,29 @@
     <div class="new-card">
       <h3 id="compFormTitle">Novo compromisso</h3>
       <div class="field"><label>Assunto</label><input id="compAssunto" type="text" placeholder="Ex.: Reunião de pais"></div>
+
+      <div class="view-toggle" id="compRepeatToggle" style="margin-bottom:12px;">
+        <button type="button" class="active" data-repeat="once">Data única</button>
+        <button type="button" data-repeat="weekly">Toda semana</button>
+      </div>
+
       <div class="row2">
         <div class="field"><label>Turma</label>
           <select id="compTurma"><option value="">Selecione</option></select>
         </div>
-        <div class="field"><label>Data</label><input id="compDate" type="date"></div>
+        <div class="field" id="compDateField"><label>Data</label><input id="compDate" type="date"></div>
+        <div class="field" id="compWeekdayField" style="display:none;">
+          <label>Dia da semana</label>
+          <select id="compWeekday">
+            <option value="1">Toda segunda</option>
+            <option value="2">Toda terça</option>
+            <option value="3">Toda quarta</option>
+            <option value="4">Toda quinta</option>
+            <option value="5">Toda sexta</option>
+            <option value="6">Todo sábado</option>
+            <option value="0">Todo domingo</option>
+          </select>
+        </div>
       </div>
       <div class="field"><label>Descrição (opcional)</label><textarea id="compDesc" placeholder="Detalhes do compromisso"></textarea></div>
       <div class="form-btn-row">
@@ -880,6 +902,7 @@
   var ICON_EDIT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICON_DELETE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var ICON_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12.5l4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_REPEAT = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4M3 12.1v-1a4 4 0 0 1 4-4h13M7 21.9l-4-4 4-4M21 12.9v1a4 4 0 0 1-4 4H4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function turmasOrdenadas(){
     return turmas.slice().sort(function(a,b){
       return a.localeCompare(b, "pt-BR", {numeric:true, sensitivity:"base"});
@@ -892,7 +915,7 @@
     var items = [];
     provas.forEach(function(p){ items.push({type:"provas", subj:p.subj, date:p.date, id:p.id, turma:p.turma}); });
     trabalhos.filter(function(t){ return !t.done; }).forEach(function(t){ items.push({type:"trabalhos", subj:t.subj, date:t.date, id:t.id, turma:t.turma}); });
-    compromissos.forEach(function(c){ items.push({type:"compromissos", subj:c.assunto, date:c.date, id:c.id, turma:c.turma}); });
+    compromissos.forEach(function(c){ items.push({type:"compromissos", subj:c.assunto, date:compEffectiveDate(c), id:c.id, turma:c.turma}); });
     items.sort(function(a,b){ return daysUntil(a.date) - daysUntil(b.date); });
     items = items.filter(function(it){ var d = daysUntil(it.date); return d >= 0 && d <= 21; }).slice(0,8);
 
@@ -1506,6 +1529,26 @@
 
   /* ---------- Compromissos escolares ---------- */
   var compFilterTurma = "";
+  var WEEKDAY_NAMES = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  var WEEKDAY_TODA = ["Todo domingo","Toda segunda","Toda terça","Toda quarta","Toda quinta","Toda sexta","Todo sábado"];
+
+  function nextWeekdayDate(weekday){
+    var today = new Date(); today.setHours(0,0,0,0);
+    var diff = (weekday - today.getDay() + 7) % 7;
+    var d = new Date(today);
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+  function compEffectiveDate(c){
+    if(c.recurring){
+      var d = nextWeekdayDate(c.weekday);
+      return ymd(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    return c.date;
+  }
+  function compRecurrenceLabel(c){
+    return WEEKDAY_TODA[c.weekday] || "Toda semana";
+  }
 
   function renderCompTurmaFilter(){
     var sel = document.getElementById("compTurmaFilter");
@@ -1525,7 +1568,7 @@
     var items = [];
     provas.forEach(function(p){ items.push({type:"provas", label:"Prova", subj:p.subj, turma:p.turma, date:p.date, pastLabel:"realizada"}); });
     trabalhos.forEach(function(t){ items.push({type:"trabalhos", label:"Trabalho", subj:t.subj, turma:t.turma, date:t.date, pastLabel: t.done ? "entregue" : "atrasado", done:t.done}); });
-    compromissos.forEach(function(c){ items.push({type:"compromissos", id:c.id, label:"Compromisso", subj:c.assunto, turma:c.turma, date:c.date, pastLabel:"realizado"}); });
+    compromissos.forEach(function(c){ items.push({type:"compromissos", id:c.id, label:"Compromisso", subj:c.assunto, turma:c.turma, date:compEffectiveDate(c), pastLabel:"realizado", recurring:c.recurring, recurLabel: c.recurring ? compRecurrenceLabel(c) : null}); });
     var filtered = items.filter(function(it){
       return (!compFilterTurma || it.turma === compFilterTurma) && daysUntil(it.date) >= 0;
     });
@@ -1540,13 +1583,15 @@
     wrap.innerHTML = filtered.map(function(it){
       var chip = it.done ? {cls:"ok", text:"entregue"} : chipFor(daysUntil(it.date), it.pastLabel);
       var turmaTxt = it.turma ? " · "+it.turma : "";
+      var dateTxt = it.recurring ? (it.recurLabel+" · próx. "+formatDateLabel(it.date)) : formatDateLabel(it.date);
       var actions = it.type === "compromissos"
         ? '<button class="icon-btn edit-btn" data-comp-edit="'+it.id+'" aria-label="Editar">'+ICON_EDIT+'</button>'+
           '<button class="icon-btn" data-comp-del="'+it.id+'" aria-label="Excluir">'+ICON_DELETE+'</button>'
         : "";
       return '<div class="comp-item '+it.type+'">'+
+        (it.recurring ? '<span class="recur-badge" title="Compromisso recorrente">'+ICON_REPEAT+'</span>' : '') +
         '<div class="info"><div class="subj">'+escapeHTML(it.subj)+'</div>'+
-        '<div class="meta">'+it.label+turmaTxt+' · '+formatDateLabel(it.date)+'</div></div>'+
+        '<div class="meta">'+it.label+turmaTxt+' · '+dateTxt+'</div></div>'+
         '<span class="chip '+chip.cls+'">'+chip.text+'</span>'+
         (actions ? '<div class="item-actions">'+actions+'</div>' : '') +
       '</div>';
@@ -1567,6 +1612,19 @@
   }
 
   var editingCompId = null;
+  var compRepeatMode = "once";
+
+  function setCompRepeatMode(mode){
+    compRepeatMode = mode;
+    document.querySelectorAll('#compRepeatToggle button').forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.repeat === mode);
+    });
+    document.getElementById("compDateField").style.display = mode === "once" ? "" : "none";
+    document.getElementById("compWeekdayField").style.display = mode === "weekly" ? "" : "none";
+  }
+  document.querySelectorAll('#compRepeatToggle button').forEach(function(btn){
+    btn.addEventListener("click", function(){ setCompRepeatMode(btn.dataset.repeat); });
+  });
 
   function startCompEdit(id){
     var c = compromissos.find(function(x){ return x.id === id; });
@@ -1574,8 +1632,15 @@
     editingCompId = id;
     document.getElementById("compAssunto").value = c.assunto || "";
     document.getElementById("compTurma").value = c.turma || "";
-    document.getElementById("compDate").value = c.date || "";
     document.getElementById("compDesc").value = c.desc || "";
+    if(c.recurring){
+      setCompRepeatMode("weekly");
+      document.getElementById("compWeekday").value = String(c.weekday);
+      document.getElementById("compDate").value = "";
+    } else {
+      setCompRepeatMode("once");
+      document.getElementById("compDate").value = c.date || "";
+    }
     document.getElementById("compFormTitle").textContent = "Editar compromisso";
     document.getElementById("addComp").textContent = "Salvar alterações";
     document.getElementById("cancelCompEdit").style.display = "inline-block";
@@ -1588,6 +1653,7 @@
     document.getElementById("compTurma").value = "";
     document.getElementById("compDate").value = "";
     document.getElementById("compDesc").value = "";
+    setCompRepeatMode("once");
     document.getElementById("compFormTitle").textContent = "Novo compromisso";
     document.getElementById("addComp").textContent = "Adicionar compromisso";
     document.getElementById("cancelCompEdit").style.display = "none";
@@ -1597,20 +1663,30 @@
   document.getElementById("addComp").addEventListener("click", function(){
     var assunto = document.getElementById("compAssunto").value.trim();
     var turma = document.getElementById("compTurma").value.trim();
-    var date = document.getElementById("compDate").value;
     var desc = document.getElementById("compDesc").value.trim();
-    if(!assunto || !date){
+    var weekly = compRepeatMode === "weekly";
+    var date = weekly ? "" : document.getElementById("compDate").value;
+    var weekday = weekly ? parseInt(document.getElementById("compWeekday").value, 10) : null;
+
+    if(!assunto || (!weekly && !date)){
       var missing = !assunto ? "assunto" : "data";
       alert("Preencha o "+missing+" do compromisso.");
       return;
     }
     if(editingCompId){
       var c = compromissos.find(function(x){ return x.id === editingCompId; });
-      if(c){ c.assunto = assunto; c.turma = turma; c.date = date; c.desc = desc; }
+      if(c){
+        c.assunto = assunto; c.turma = turma; c.desc = desc;
+        c.recurring = weekly;
+        if(weekly){ c.weekday = weekday; delete c.date; }
+        else { c.date = date; delete c.weekday; }
+      }
       persistCompromissos();
       cancelCompEdit();
     } else {
-      compromissos.push({id:uid(), assunto:assunto, turma:turma, date:date, desc:desc});
+      var novo = {id:uid(), assunto:assunto, turma:turma, desc:desc, recurring:weekly};
+      if(weekly){ novo.weekday = weekday; } else { novo.date = date; }
+      compromissos.push(novo);
       persistCompromissos();
       document.getElementById("compAssunto").value = "";
       document.getElementById("compTurma").value = "";
