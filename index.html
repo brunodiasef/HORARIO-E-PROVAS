@@ -942,14 +942,20 @@
 
   /* ---------- Provas ---------- */
   var provaFilterTurma = "";
+  var provasListRevealed = false;
 
   function renderTurmaFilter(){
     var sel = document.getElementById("provaTurmaFilter");
     var current = sel.value;
-    sel.innerHTML = '<option value="">Todas as turmas</option>' +
-      turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
-    sel.value = turmas.indexOf(current) >= 0 ? current : "";
-    provaFilterTurma = sel.value;
+    var options = turmasOrdenadas().map(function(t){ return '<option value="'+escapeAttr(t)+'">'+escapeHTML(t)+'</option>'; }).join("");
+    if(!provasListRevealed){
+      sel.innerHTML = '<option value="__placeholder__" selected disabled hidden>Selecione uma turma para ver</option>' +
+        '<option value="">Todas as turmas</option>' + options;
+    } else {
+      sel.innerHTML = '<option value="">Todas as turmas</option>' + options;
+      sel.value = (turmas.indexOf(current) >= 0 || current === "") ? current : "";
+      provaFilterTurma = sel.value;
+    }
   }
 
   function buildProvaCardHTML(p){
@@ -989,6 +995,12 @@
   function renderProvas(){
     var wrap = document.getElementById("provasList");
     renderTurmaFilter();
+    if(!provasListRevealed){
+      wrap.innerHTML = '<div class="empty-note">Selecione "Todas as turmas" ou uma turma específica acima para ver as provas.</div>';
+      document.getElementById("provasCount").textContent = "";
+      if(provaViewMode === "calendar") renderProvaCalendar();
+      return;
+    }
     var filtered = provas.filter(function(p){ return !provaFilterTurma || p.turma === provaFilterTurma; });
     var sorted = filtered.slice().sort(function(a,b){ return daysUntil(a.date)-daysUntil(b.date); });
     document.getElementById("provasCount").textContent = filtered.length + (provaFilterTurma ? "/"+provas.length : "");
@@ -1002,6 +1014,7 @@
   }
 
   document.getElementById("provaTurmaFilter").addEventListener("change", function(){
+    provasListRevealed = true;
     provaFilterTurma = this.value;
     renderProvas();
   });
