@@ -585,7 +585,7 @@
   <section class="view" id="view-trabalhos">
     <div class="new-card">
       <h3 id="trabFormTitle">Novo trabalho</h3>
-      <div class="field"><label>Matéria</label><input id="trabSubj" type="text" placeholder="Ex.: História"></div>
+      <div class="field"><label>Matéria</label><input id="trabSubj" type="text" placeholder="Ex.: História" value="Educação Física"></div>
       <div class="row2">
         <div class="field"><label>Turma</label>
           <select id="trabTurma"><option value="">Selecione</option></select>
@@ -1234,9 +1234,11 @@
     document.querySelector("#view-trabalhos .new-card").scrollIntoView({behavior:"smooth", block:"start"});
   }
 
+  var DEFAULT_TRAB_SUBJ = "Educação Física";
+
   function cancelTrabEdit(){
     editingTrabId = null;
-    document.getElementById("trabSubj").value = "";
+    document.getElementById("trabSubj").value = DEFAULT_TRAB_SUBJ;
     document.getElementById("trabTurma").value = "";
     document.getElementById("trabDate").value = "";
     document.getElementById("trabDesc").value = "";
@@ -1264,7 +1266,7 @@
     } else {
       trabalhos.push({id:uid(), subj:subj, turma:turma, date:date, desc:desc, done:false});
       persistTrabalhos();
-      document.getElementById("trabSubj").value = "";
+      document.getElementById("trabSubj").value = DEFAULT_TRAB_SUBJ;
       document.getElementById("trabTurma").value = "";
       document.getElementById("trabDate").value = "";
       document.getElementById("trabDesc").value = "";
